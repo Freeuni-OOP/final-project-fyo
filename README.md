@@ -75,3 +75,23 @@ cd backend
 docker compose down -v     (this deletes all the data in db frtxilad amis gashvebisas)
 docker compose up -d
 ```
+
+## Team Workflow
+
+Do not work directly on the `main` branch.
+
+For every task, create a new branch:
+
+```bash
+git checkout main
+git pull
+git checkout -b tqveni_taskis_saxeli_mokled
+```
+
+After finishing the task, push the branch and open a pull request:
+
+```bash
+git push -u origin tqveni_taskis_saxeli_mokled
+```
+
+Changes should be merged into `main` only through pull requests.
