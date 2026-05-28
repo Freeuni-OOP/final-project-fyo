@@ -1,6 +1,3 @@
-# FYO Sports Platform
-
-Sports platform for finding players, teams, and organizing matches.
 
 ## Requirements
 
@@ -57,7 +54,7 @@ http://localhost:8081
 ```bash
 cd frontend
 cp .env.example .env
-npm install
+npm install  (this is not required on every run only when you add new npm packages or pulling project  the first time )
 npm run dev
 ```
 
@@ -75,8 +72,6 @@ To reset the local database during development:
 
 ```bash
 cd backend
-docker compose down -v
+docker compose down -v     (this deletes all the data in db frtxilad amis gashvebisas)
 docker compose up -d
 ```
-
-This deletes local database data.
