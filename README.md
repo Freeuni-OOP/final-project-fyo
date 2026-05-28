@@ -88,10 +88,19 @@ git pull
 git checkout -b tqveni_taskis_saxeli_mokled
 ```
 
+sanam dapushavt manamde ecadet bevri state daacomitot ro rame gaketebuli varianti tu mogwont sanam rames daamatebt (vtqvat axalis damatebit ro gafuwdes) dzveli ro ar dagekargot daacomitet xolme aq davwer komandebs 
+g
+```bash
+git add .
+git commit -m "komitis mokle agwera"
+```
+
+
+
 After finishing the task, push the branch and open a pull request:
 
 ```bash
 git push -u origin tqveni_taskis_saxeli_mokled
 ```
-
+pull requestebs vxsnit githubidan, ragacas ro dapushavt mere amogigdebt gitze create pull request da tqveni branchis saxels magas daawert da request sheiqmneba !!!merge to main ro aweria pirdapir magas ar daawirot (chem shecdomebs nu gaimeorebt dd )
 Changes should be merged into `main` only through pull requests.
