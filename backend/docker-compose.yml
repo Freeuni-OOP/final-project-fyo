@@ -1,0 +1,31 @@
+name: final-project-fyo
+
+services:
+  db:
+    image: postgres:16
+    container_name: fyo_platform_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer:latest
+    container_name: fyo_platform_adminer
+    ports:
+      - "${ADMINER_PORT}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
