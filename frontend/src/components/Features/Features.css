@@ -1,0 +1,66 @@
+.features {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: var(--pad-y) var(--gutter);
+}
+
+.flist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--ink);
+}
+.frow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 24px 48px;
+  padding: clamp(26px, 3.4vw, 44px) 4px;
+  border-bottom: 1px solid var(--hair);
+  transition: background 0.16s ease, padding-left 0.2s ease;
+}
+.frow:hover {
+  background: var(--chalk-2);
+  padding-left: 16px;
+}
+.frow__lead {
+  display: flex;
+  gap: 18px;
+}
+.frow__no {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--ink-45);
+  padding-top: 0.55em;
+}
+.frow__k {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--court);
+  margin-bottom: 10px;
+}
+.frow__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  line-height: 0.96;
+  text-transform: uppercase;
+}
+.frow__body {
+  margin: 0;
+  max-width: 44ch;
+  font-size: 1.02rem;
+  line-height: 1.55;
+  color: var(--ink-70);
+}
+
+@media (max-width: 860px) {
+  .frow {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
