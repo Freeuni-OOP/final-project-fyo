@@ -1,0 +1,42 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 14px 22px;
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.btn--solid {
+  background: var(--ink);
+  color: var(--chalk);
+}
+.btn--solid:hover {
+  background: var(--court);
+  border-color: var(--court);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--ink);
+}
+.btn--ghost:hover {
+  background: var(--ink);
+  color: var(--chalk);
+}
+
+.btn--optic {
+  background: var(--optic);
+  border-color: var(--optic);
+  color: var(--ink);
+}
+.btn--optic:hover {
+  transform: translateY(-2px);
+}
