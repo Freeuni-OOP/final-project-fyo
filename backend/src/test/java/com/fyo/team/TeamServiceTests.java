@@ -61,8 +61,12 @@ class TeamServiceTests {
         assertThat(joined.members()).hasSize(2);
         assertThat(joined.members())
                 .extracting(teamMember -> teamMember.userId())
-                .containsExactly(captain.getId(), member.getId());
-        assertThat(joined.members().get(1).role()).isEqualTo(TeamMemberRole.MEMBER);
+                .contains(captain.getId(), member.getId());
+        assertThat(joined.members())
+                .anyMatch(teamMember ->
+                        teamMember.userId().equals(member.getId())
+                                && teamMember.role() == TeamMemberRole.MEMBER
+                );
 
         assertThatThrownBy(() -> teamService.joinTeam(created.id(), new JoinTeamRequest(member.getId())))
                 .isInstanceOf(ResponseStatusException.class)

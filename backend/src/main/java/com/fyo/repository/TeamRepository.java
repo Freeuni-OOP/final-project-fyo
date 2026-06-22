@@ -3,14 +3,11 @@ package com.fyo.repository;
 import com.fyo.domain.Team;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TeamRepository extends JpaRepository<Team, Long> {
 
-    @EntityGraph(attributePaths = {"sport", "captain"})
-    List<Team> findByArchivedFalseOrderByCreatedAtDesc();
+    List<Team> findByArchivedFalse();
 
-    @EntityGraph(attributePaths = {"sport", "captain"})
     Optional<Team> findByIdAndArchivedFalse(Long id);
 }
