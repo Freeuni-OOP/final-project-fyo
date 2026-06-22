@@ -1,0 +1,29 @@
+.join {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: var(--pad-y) var(--gutter);
+  text-align: center;
+}
+.join__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(2.8rem, 8vw, 6.5rem);
+  line-height: 0.88;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+.join__sub {
+  margin: 22px auto 0;
+  max-width: 44ch;
+  font-size: 1.1rem;
+  line-height: 1.55;
+  color: var(--ink-70);
+}
+.join__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 34px;
+}
