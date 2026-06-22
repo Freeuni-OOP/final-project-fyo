@@ -44,27 +44,24 @@ public class TeamService {
 
     @Transactional(readOnly = true)
     public List<TeamSummaryResponse> getTeams() {
-        return teamRepository.findByArchivedFalseOrderByCreatedAtDesc().stream()
+        return teamRepository.findByArchivedFalse().stream()
                 .map(this::toSummaryResponse)
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public TeamDetailsResponse getTeam(Long id) {
-        Team team = getActiveTeam(id);
-        return toDetailsResponse(team, teamMemberRepository.findByTeamIdOrderByRoleAscJoinedAtAscIdAsc(team.getId()));
+        Team team = teamRepository.findByIdAndArchivedFalse(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found"));
+        return toDetailsResponse(team, teamMemberRepository.findByTeamId(team.getId()));
     }
 
     @Transactional
     public TeamDetailsResponse createTeam(CreateTeamRequest request) {
         Sport sport = sportRepository.findById(request.sportId())
-                .orElseThrow(() -> notFound("Sport not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sport not found"));
         User captain = userRepository.findById(request.captainUserId())
-                .orElseThrow(() -> notFound("Captain user not found"));
-
-        if (captain.isArchived()) {
-            throw badRequest("Captain user is archived");
-        }
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Captain user not found"));
 
         short maxPlayers = request.maxPlayers().shortValue();
         short openSpots = (short) (maxPlayers - 1);
@@ -73,9 +70,9 @@ public class TeamService {
         Team team = new Team(
                 request.name().trim(),
                 sport,
-                normalizeBlank(request.region()),
-                normalizeBlank(request.description()),
-                normalizeBlank(request.logoUrl()),
+                request.region(),
+                request.description(),
+                request.logoUrl(),
                 captain,
                 maxPlayers,
                 openSpots,
@@ -91,18 +88,16 @@ public class TeamService {
 
     @Transactional
     public TeamDetailsResponse joinTeam(Long id, JoinTeamRequest request) {
-        Team team = getActiveTeam(id);
+        Team team = teamRepository.findByIdAndArchivedFalse(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found"));
         User user = userRepository.findById(request.userId())
-                .orElseThrow(() -> notFound("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        if (user.isArchived()) {
-            throw badRequest("User is archived");
-        }
         if (!team.isRecruiting()) {
-            throw badRequest("Team is not recruiting");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Team is not recruiting");
         }
         if (team.getOpenSpots() <= 0) {
-            throw badRequest("Team has no open spots");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Team has no open spots");
         }
         if (teamMemberRepository.existsByTeamIdAndUserId(team.getId(), user.getId())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "User is already a team member");
@@ -111,12 +106,7 @@ public class TeamService {
         team.takeOpenSpot();
         teamMemberRepository.save(new TeamMember(team, user, TeamMemberRole.MEMBER));
 
-        return toDetailsResponse(team, teamMemberRepository.findByTeamIdOrderByRoleAscJoinedAtAscIdAsc(team.getId()));
-    }
-
-    private Team getActiveTeam(Long id) {
-        return teamRepository.findByIdAndArchivedFalse(id)
-                .orElseThrow(() -> notFound("Team not found"));
+        return toDetailsResponse(team, teamMemberRepository.findByTeamId(team.getId()));
     }
 
     private TeamSummaryResponse toSummaryResponse(Team team) {
@@ -179,18 +169,4 @@ public class TeamService {
         );
     }
 
-    private String normalizeBlank(String value) {
-        if (value == null || value.isBlank()) {
-            return null;
-        }
-        return value.trim();
-    }
-
-    private ResponseStatusException notFound(String reason) {
-        return new ResponseStatusException(HttpStatus.NOT_FOUND, reason);
-    }
-
-    private ResponseStatusException badRequest(String reason) {
-        return new ResponseStatusException(HttpStatus.BAD_REQUEST, reason);
-    }
 }
