@@ -1,0 +1,24 @@
+# Maven build output
+target/
+
+# IntelliJ project files
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Compiled class files
+*.class
+
+# Logs
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Environment/config files with secrets (we'll use this later for DB credentials)
+*.env
+config.properties
+src/main/resources/db.properties

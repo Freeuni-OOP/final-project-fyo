@@ -1,0 +1,3 @@
+db.url=jdbc:mysql://localhost:3306/hikebuddy
+db.user=hikeuser
+db.password=your_password_here
