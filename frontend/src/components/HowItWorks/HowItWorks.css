@@ -1,0 +1,122 @@
+.court {
+  position: relative;
+  background: var(--court);
+  color: var(--chalk);
+  overflow: hidden;
+}
+.court__content {
+  position: relative;
+  z-index: 2;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: var(--pad-y) var(--gutter);
+}
+
+/* chalk markings */
+.court__lines {
+  position: absolute;
+  inset: clamp(28px, 4vw, 52px);
+  z-index: 1;
+  pointer-events: none;
+}
+.line {
+  position: absolute;
+  background: rgba(241, 239, 233, 0.34);
+}
+.line--top,
+.line--bottom,
+.line--net {
+  left: 0;
+  right: 0;
+  height: 2px;
+}
+.line--top {
+  top: 0;
+}
+.line--bottom {
+  bottom: 0;
+}
+.line--net {
+  top: 50%;
+  height: 3px;
+  background: rgba(241, 239, 233, 0.5);
+}
+.line--left,
+.line--right,
+.line--center,
+.line--service {
+  top: 0;
+  bottom: 0;
+  width: 2px;
+}
+.line--left {
+  left: 0;
+}
+.line--right {
+  right: 0;
+}
+.line--center {
+  left: 50%;
+  background: rgba(241, 239, 233, 0.22);
+}
+.line--service {
+  left: 22%;
+  background: rgba(241, 239, 233, 0.16);
+}
+.court__mark {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  color: rgba(241, 239, 233, 0.5);
+}
+.court__mark--a {
+  top: calc(25% - 6px);
+}
+.court__mark--b {
+  top: calc(75% - 6px);
+}
+
+/* steps */
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1px;
+  background: rgba(241, 239, 233, 0.18);
+  border: 1px solid rgba(241, 239, 233, 0.18);
+}
+.step {
+  background: var(--court);
+  padding: clamp(22px, 2.6vw, 34px);
+}
+.step__no {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--optic);
+  letter-spacing: 0.08em;
+}
+.step__title {
+  margin: 14px 0 10px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.45rem;
+  line-height: 1.02;
+  text-transform: uppercase;
+}
+.step__body {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: rgba(241, 239, 233, 0.72);
+}
+
+@media (max-width: 560px) {
+  .court__mark {
+    display: none;
+  }
+}
