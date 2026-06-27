@@ -1,0 +1,23 @@
+.ball {
+  display: inline-block;
+  width: 0.62em;
+  height: 0.62em;
+  border-radius: 50%;
+  background: var(--optic);
+  vertical-align: baseline;
+}
+
+/* the O in the FYO wordmark */
+.ball--mark {
+  width: 0.66em;
+  height: 0.66em;
+  margin-left: 0.02em;
+  box-shadow: inset -0.06em -0.06em 0 rgba(20, 20, 15, 0.12);
+}
+
+/* leading each ticker item */
+.ball--tick {
+  width: 7px;
+  height: 7px;
+  margin-right: 12px;
+}
