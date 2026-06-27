@@ -28,7 +28,7 @@ export default function Signup(){
                 method: "POST", //we are posting
                 headers: {
                     "Content-Type": "application/json", //we are sending JSON file
-                    Authorization: 'Bearer ${tokenId}', //attach auth token to request
+                    Authorization: `Bearer ${tokenId}`, //attach auth token to request
                 },
                 body: JSON.stringify({email}), //sending actual data
             });
