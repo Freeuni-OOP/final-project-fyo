@@ -88,7 +88,7 @@ public class TeamService {
 
     @Transactional
     public TeamDetailsResponse joinTeam(Long id, JoinTeamRequest request) {
-        Team team = teamRepository.findByIdAndArchivedFalse(id)
+        Team team = teamRepository.findByIdAndArchivedFalseForUpdate(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found"));
         User user = userRepository.findById(request.userId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));

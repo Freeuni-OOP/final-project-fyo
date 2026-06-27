@@ -33,27 +33,25 @@ class TeamServiceTests {
     private SportRepository sportRepository;
 
     @Test
-    void creatingTeamAddsCaptainMembershipAndJoiningAddsMember() {
+    void createTeamAddsCaptainMembership() {
         List<User> users = userRepository.findAll();
-        Sport sport = sportRepository.findAll().getFirst();
         User captain = users.get(0);
-        User member = users.get(1);
 
-        TeamDetailsResponse created = teamService.createTeam(new CreateTeamRequest(
-                "Test Team " + UUID.randomUUID(),
-                sport.getId(),
-                "Tbilisi",
-                "Integration test team",
-                "https://example.com/logo.png",
-                3,
-                true,
-                captain.getId()
-        ));
+        TeamDetailsResponse created = createTeam(captain, 3, true);
 
         assertThat(created.openSpots()).isEqualTo(2);
         assertThat(created.members()).hasSize(1);
         assertThat(created.members().getFirst().userId()).isEqualTo(captain.getId());
         assertThat(created.members().getFirst().role()).isEqualTo(TeamMemberRole.CAPTAIN);
+    }
+
+    @Test
+    void joinTeamAddsMember() {
+        List<User> users = userRepository.findAll();
+        User captain = users.get(0);
+        User member = users.get(1);
+
+        TeamDetailsResponse created = createTeam(captain, 3, true);
 
         TeamDetailsResponse joined = teamService.joinTeam(created.id(), new JoinTeamRequest(member.getId()));
 
@@ -67,9 +65,94 @@ class TeamServiceTests {
                         teamMember.userId().equals(member.getId())
                                 && teamMember.role() == TeamMemberRole.MEMBER
                 );
+    }
+
+    @Test
+    void joinTeamRejectsDuplicateMember() {
+        List<User> users = userRepository.findAll();
+        User captain = users.get(0);
+        User member = users.get(1);
+
+        TeamDetailsResponse created = createTeam(captain, 3, true);
+        teamService.joinTeam(created.id(), new JoinTeamRequest(member.getId()));
 
         assertThatThrownBy(() -> teamService.joinTeam(created.id(), new JoinTeamRequest(member.getId())))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("User is already a team member");
+    }
+
+    @Test
+    void createTeamRejectsInvalidSport() {
+        User captain = userRepository.findAll().getFirst();
+
+        assertThatThrownBy(() -> teamService.createTeam(new CreateTeamRequest(
+                "Test Team " + UUID.randomUUID(),
+                -1L,
+                "Tbilisi",
+                "Integration test team",
+                "https://example.com/logo.png",
+                3,
+                true,
+                captain.getId()
+        )))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Sport not found");
+    }
+
+    @Test
+    void createTeamRejectsInvalidCaptainUser() {
+        Sport sport = sportRepository.findAll().getFirst();
+
+        assertThatThrownBy(() -> teamService.createTeam(new CreateTeamRequest(
+                "Test Team " + UUID.randomUUID(),
+                sport.getId(),
+                "Tbilisi",
+                "Integration test team",
+                "https://example.com/logo.png",
+                3,
+                true,
+                -1L
+        )))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Captain user not found");
+    }
+
+    @Test
+    void joinTeamRejectsNonRecruitingTeam() {
+        List<User> users = userRepository.findAll();
+        User captain = users.get(0);
+        User member = users.get(1);
+        TeamDetailsResponse created = createTeam(captain, 3, false);
+
+        assertThatThrownBy(() -> teamService.joinTeam(created.id(), new JoinTeamRequest(member.getId())))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Team is not recruiting");
+    }
+
+    @Test
+    void joinTeamRejectsFullTeam() {
+        List<User> users = userRepository.findAll();
+        User captain = users.get(0);
+        User member = users.get(1);
+        TeamDetailsResponse created = createTeam(captain, 1, true);
+
+        assertThatThrownBy(() -> teamService.joinTeam(created.id(), new JoinTeamRequest(member.getId())))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Team has no open spots");
+    }
+
+    private TeamDetailsResponse createTeam(User captain, int maxPlayers, boolean isRecruiting) {
+        Sport sport = sportRepository.findAll().getFirst();
+
+        return teamService.createTeam(new CreateTeamRequest(
+                "Test Team " + UUID.randomUUID(),
+                sport.getId(),
+                "Tbilisi",
+                "Integration test team",
+                "https://example.com/logo.png",
+                maxPlayers,
+                isRecruiting,
+                captain.getId()
+        ));
     }
 }
