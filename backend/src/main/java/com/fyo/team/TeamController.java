@@ -1,19 +1,10 @@
 package com.fyo.team;
 
-import com.fyo.team.dto.CreateTeamRequest;
-import com.fyo.team.dto.JoinTeamRequest;
-import com.fyo.team.dto.TeamDetailsResponse;
-import com.fyo.team.dto.TeamSummaryResponse;
+import com.fyo.team.dto.*;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/teams")
@@ -44,5 +35,26 @@ public class TeamController {
     @PostMapping("/{id}/join")
     public TeamDetailsResponse joinTeam(@PathVariable Long id, @Valid @RequestBody JoinTeamRequest request) {
         return teamService.joinTeam(id, request);
+    }
+
+    @PostMapping("/{id}/join-requests")
+    @ResponseStatus(HttpStatus.CREATED)
+    public JoinRequestResponse requestToJoin(@PathVariable Long id, @RequestParam Long userId) {
+        return teamService.requestToJoin(id, userId);
+    }
+
+    @GetMapping("/{id}/join-requests")
+    public List<JoinRequestResponse> getPendingJoinRequests(@PathVariable Long id) {
+        return teamService.getPendingJoinRequests(id);
+    }
+
+    @PostMapping("/{id}/join-requests/{requestId}/accept")
+    public JoinRequestResponse acceptJoinRequest(@PathVariable Long id, @PathVariable Long requestId) {
+        return teamService.acceptJoinRequest(id, requestId);
+    }
+
+    @PostMapping("/{id}/join-requests/{requestId}/decline")
+    public JoinRequestResponse declineJoinRequest(@PathVariable Long id, @PathVariable Long requestId) {
+        return teamService.declineJoinRequest(id, requestId);
     }
 }

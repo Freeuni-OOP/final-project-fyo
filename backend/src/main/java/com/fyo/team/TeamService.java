@@ -1,21 +1,9 @@
 package com.fyo.team;
 
-import com.fyo.domain.Sport;
-import com.fyo.domain.Team;
-import com.fyo.domain.TeamMember;
-import com.fyo.domain.TeamMemberRole;
-import com.fyo.domain.User;
-import com.fyo.repository.SportRepository;
-import com.fyo.repository.TeamMemberRepository;
-import com.fyo.repository.TeamRepository;
-import com.fyo.repository.UserRepository;
-import com.fyo.team.dto.CreateTeamRequest;
-import com.fyo.team.dto.SportResponse;
-import com.fyo.team.dto.JoinTeamRequest;
-import com.fyo.team.dto.TeamDetailsResponse;
-import com.fyo.team.dto.TeamMemberResponse;
-import com.fyo.team.dto.TeamSummaryResponse;
-import com.fyo.team.dto.UserSummaryResponse;
+import com.fyo.domain.*;
+import com.fyo.repository.*;
+import com.fyo.team.dto.*;
+
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -29,17 +17,20 @@ public class TeamService {
     private final TeamMemberRepository teamMemberRepository;
     private final UserRepository userRepository;
     private final SportRepository sportRepository;
+    private final JoinRequestRepository joinRequestRepository;
 
     public TeamService(
             TeamRepository teamRepository,
             TeamMemberRepository teamMemberRepository,
             UserRepository userRepository,
-            SportRepository sportRepository
+            SportRepository sportRepository,
+            JoinRequestRepository joinRequestRepository
     ) {
         this.teamRepository = teamRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.userRepository = userRepository;
         this.sportRepository = sportRepository;
+        this.joinRequestRepository = joinRequestRepository;
     }
 
     @Transactional(readOnly = true)
@@ -109,6 +100,74 @@ public class TeamService {
         return toDetailsResponse(team, teamMemberRepository.findByTeamId(team.getId()));
     }
 
+    @Transactional
+    public JoinRequestResponse requestToJoin(Long teamId, Long userId) {
+        Team team = teamRepository.findByIdAndArchivedFalse(teamId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        if (!team.isRecruiting()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Team is not recruiting");
+        }
+        if (team.getOpenSpots() <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Team has no open spots");
+        }
+        if (teamMemberRepository.existsByTeamIdAndUserId(teamId, userId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "User is already a team member");
+        }
+        if (joinRequestRepository.existsByTeamIdAndUserId(teamId, userId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Join request already exists");
+        }
+
+        JoinRequest joinRequest = joinRequestRepository.save(new JoinRequest(team, user));
+        return toJoinRequestResponse(joinRequest);
+    }
+
+    @Transactional
+    public JoinRequestResponse acceptJoinRequest(Long teamId, Long requestId) {
+        JoinRequest joinRequest = joinRequestRepository.findByIdAndTeamId(requestId, teamId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Join request not found"));
+
+        if (joinRequest.getStatus() != JoinRequestStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request is not pending");
+        }
+
+        Team team = joinRequest.getTeam();
+        if (team.getOpenSpots() <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Team has no open spots");
+        }
+
+        joinRequest.accept();
+        team.takeOpenSpot();
+        teamMemberRepository.save(new TeamMember(team, joinRequest.getUser(), TeamMemberRole.MEMBER));
+
+        return toJoinRequestResponse(joinRequest);
+    }
+
+    @Transactional
+    public JoinRequestResponse declineJoinRequest(Long teamId, Long requestId) {
+        JoinRequest joinRequest = joinRequestRepository.findByIdAndTeamId(requestId, teamId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Join request not found"));
+
+        if (joinRequest.getStatus() != JoinRequestStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request is not pending");
+        }
+
+        joinRequest.decline();
+        return toJoinRequestResponse(joinRequest);
+    }
+
+    @Transactional(readOnly = true)
+    public List<JoinRequestResponse> getPendingJoinRequests(Long teamId) {
+        teamRepository.findByIdAndArchivedFalse(teamId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found"));
+        return joinRequestRepository.findByTeamIdAndStatus(teamId, JoinRequestStatus.PENDING)
+                .stream()
+                .map(this::toJoinRequestResponse)
+                .toList();
+    }
+
     private TeamSummaryResponse toSummaryResponse(Team team) {
         return new TeamSummaryResponse(
                 team.getId(),
@@ -166,6 +225,20 @@ public class TeamService {
                 user.getImageUrl(),
                 member.getRole(),
                 member.getJoinedAt()
+        );
+    }
+
+    private JoinRequestResponse toJoinRequestResponse(JoinRequest joinRequest) {
+        User user = joinRequest.getUser();
+        return new JoinRequestResponse(
+                joinRequest.getId(),
+                joinRequest.getTeam().getId(),
+                user.getId(),
+                user.getUsername(),
+                user.getName() + " " + user.getSurname(),
+                user.getImageUrl(),
+                joinRequest.getStatus(),
+                joinRequest.getCreatedAt()
         );
     }
 
