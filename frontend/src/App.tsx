@@ -1,56 +1,35 @@
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { useReveal } from "./hooks/useReveal";
-import { TopBar } from "./components/TopBar/TopBar";
-import { Ticker } from "./components/Ticker/Ticker";
-import { Hero } from "./components/Hero/Hero";
-import { Sports } from "./components/Sports/Sports";
-import { HowItWorks } from "./components/HowItWorks/HowItWorks";
-import { Features } from "./components/Features/Features";
-import { Scoreboard } from "./components/Scoreboard/Scoreboard";
-import { CTA } from "./components/CTA/CTA";
-import { Footer } from "./components/Footer/Footer";
+import { getOnboardingStatus } from "./api/onboarding";
+import { LandingPage } from "./pages/LandingPage";
+import { OnboardingPage } from "./pages/OnboardingPage";
 import { TeamsView } from "./teams/TeamsView";
 
-function Landing() {
-  useReveal();
+type GuardState = "loading" | "needs-onboarding" | "done";
 
-  return (
-    <main className="app-shell">
-      <TopBar />
-      <Ticker />
-      <Hero />
-      <Sports />
-      <HowItWorks />
-      <Features />
-      <Scoreboard />
-      <CTA />
-      <Footer />
-    </main>
-  );
-}
-
-/** Minimal hash router. `#/teams` opens the team view; anything else is the
- *  landing page (its in-page anchors like `#sports` keep working). */
-function useHashRoute(): string {
-  const [hash, setHash] = useState(() =>
-    typeof window !== "undefined" ? window.location.hash : ""
-  );
-
-  useEffect(() => {
-    const onChange = () => setHash(window.location.hash);
-    window.addEventListener("hashchange", onChange);
-    return () => window.removeEventListener("hashchange", onChange);
-  }, []);
-
-  return hash;
+function OnboardingGuard() {
+    const [state, setState] = useState<GuardState>("loading");
+    useEffect(() => {
+        getOnboardingStatus()
+            .then((res) => {
+                setState(res.onboardingCompleted ? "done" : "needs-onboarding");
+            })
+            .catch(() => {
+                setState("needs-onboarding");
+            });
+    }, []);
+    if (state === "loading") return null;
+    if (state === "needs-onboarding") return <Navigate to="/onboarding" replace />;
+    return <Navigate to="/" replace />;
 }
 
 export default function App() {
-  const hash = useHashRoute();
-
-  if (hash.startsWith("#/teams")) {
-    return <TeamsView />;
-  }
-
-  return <Landing />;
+    return (
+        <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/check" element={<OnboardingGuard />} />
+            <Route path="/teams" element={<TeamsView />} />
+        </Routes>
+    );
 }
