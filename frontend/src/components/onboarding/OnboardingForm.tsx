@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useState, useEffect, type CSSProperties } from "react";
 import { type OnboardingPayload, type UserSportPayload } from "../../api/onboarding";
 import { type SportDto } from "../../api/sports";
 import "./OnboardingForm.css";
@@ -43,11 +43,13 @@ const EMPTY_STEP1: Step1Fields = {
 export function OnboardingForm({ sports, onSubmit, submitting, error }: Props) {
     const [step, setStep] = useState<1 | 2>(1);
     const [fields, setFields] = useState<Step1Fields>(EMPTY_STEP1);
-    const [selectedSports, setSelectedSports] = useState
-    Record<number, SkillLevel>
-    >({});
+    const [selectedSports, setSelectedSports] = useState<Record<number, SkillLevel>>({});
     const [step1Error, setStep1Error] = useState<string | null>(null);
 
+    useEffect(() => {
+        const nodes = document.querySelectorAll<HTMLElement>("[data-reveal]");
+        nodes.forEach((n) => n.classList.add("is-in"));
+    }, [step]);
     // ── Step 1 helpers ───────────────────────────────────────────
     function setField<K extends keyof Step1Fields>(key: K, value: Step1Fields[K]) {
         setFields((prev) => ({ ...prev, [key]: value }));
