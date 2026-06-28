@@ -11,6 +11,10 @@ import jakarta.persistence.Table;
 @Table(name = "sports")
 public class Sport {
 
+    public Sport(String sportName) {
+        this.sportName = sportName;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
