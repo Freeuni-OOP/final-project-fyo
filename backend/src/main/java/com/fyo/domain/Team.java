@@ -9,6 +9,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Setter;
+
 import java.time.OffsetDateTime;
 
 @Entity
@@ -130,5 +132,9 @@ public class Team {
             throw new IllegalStateException("Team has no open spots");
         }
         openSpots--;
+    }
+
+    public void setArchived(boolean archived) {
+        this.archived = archived;
     }
 }
