@@ -10,6 +10,7 @@ import { Scoreboard } from "./components/Scoreboard/Scoreboard";
 import { CTA } from "./components/CTA/CTA";
 import { Footer } from "./components/Footer/Footer";
 import { TeamsView } from "./teams/TeamsView";
+import { ChatView } from "./chat/ChatView";
 
 function Landing() {
   useReveal();
@@ -47,6 +48,10 @@ function useHashRoute(): string {
 
 export default function App() {
   const hash = useHashRoute();
+
+  if (hash.startsWith("#/chat")) {
+    return <ChatView />;
+  }
 
   if (hash.startsWith("#/teams")) {
     return <TeamsView />;

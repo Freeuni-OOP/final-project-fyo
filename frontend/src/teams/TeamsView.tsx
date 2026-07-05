@@ -75,6 +75,7 @@ export function TeamsView() {
         <nav className="bar__nav" aria-label="Primary">
           <a href="#teams">Teams</a>
           <a href="#how">How it works</a>
+          <a href="#/chat">Chat</a>
         </nav>
         <Button variant="ghost" className="bar__cta" onClick={goHome}>
           ← Home
