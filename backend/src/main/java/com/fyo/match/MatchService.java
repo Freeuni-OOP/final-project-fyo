@@ -4,6 +4,8 @@ import com.fyo.domain.Match;
 import com.fyo.domain.Sport;
 import com.fyo.domain.Team;
 import com.fyo.domain.User;
+import com.fyo.domain.MatchFormat;
+import com.fyo.domain.MatchStatus;
 import com.fyo.match.dto.MatchParticipantResponse;
 import com.fyo.match.dto.MatchResponse;
 import com.fyo.match.dto.SportResponse;
@@ -41,6 +43,37 @@ public class MatchService {
         Match match = matchRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Match not found"));
         return toResponse(match);
+    }
+
+    @Transactional
+    public MatchResponse cancelMatch(Long id, Long actingUserId) {
+        Match match = matchRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Match not found"));
+
+        if (!isParticipant(match, actingUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a participant in this match");
+        }
+        if (match.getStatus() != MatchStatus.UPCOMING) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only an upcoming match can be cancelled");
+        }
+
+        match.cancel();
+        return toResponse(match);
+    }
+
+    private boolean isParticipant(Match match, Long actingUserId) {
+        if (match.getFormat() == MatchFormat.ONE_VS_ONE) {
+            return actingUserId.equals(idOf(match.getHomeUser())) || actingUserId.equals(idOf(match.getAwayUser()));
+        }
+        return actingUserId.equals(captainIdOf(match.getHomeTeam())) || actingUserId.equals(captainIdOf(match.getAwayTeam()));
+    }
+
+    private Long idOf(User user) {
+        return user == null ? null : user.getId();
+    }
+
+    private Long captainIdOf(Team team) {
+        return team == null || team.getCaptain() == null ? null : team.getCaptain().getId();
     }
 
     private MatchResponse toResponse(Match match) {
