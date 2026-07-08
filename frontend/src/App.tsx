@@ -10,6 +10,8 @@ import { Scoreboard } from "./components/Scoreboard/Scoreboard";
 import { CTA } from "./components/CTA/CTA";
 import { Footer } from "./components/Footer/Footer";
 import { TeamsView } from "./teams/TeamsView";
+import Login from "./Login";
+import Signup from "./Signup";
 
 function Landing() {
   useReveal();
@@ -29,8 +31,8 @@ function Landing() {
   );
 }
 
-/** Minimal hash router. `#/teams` opens the team view; anything else is the
- *  landing page (its in-page anchors like `#sports` keep working). */
+/** Minimal hash router. `#/teams`, `#/login` and `#/signup` open their views;
+ *  anything else is the landing page (its in-page anchors keep working). */
 function useHashRoute(): string {
   const [hash, setHash] = useState(() =>
     typeof window !== "undefined" ? window.location.hash : ""
@@ -50,6 +52,14 @@ export default function App() {
 
   if (hash.startsWith("#/teams")) {
     return <TeamsView />;
+  }
+
+  if (hash.startsWith("#/login")) {
+    return <Login />;
+  }
+
+  if (hash.startsWith("#/signup")) {
+    return <Signup />;
   }
 
   return <Landing />;
