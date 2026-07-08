@@ -1,0 +1,58 @@
+/* Small extras on top of teams styles (reused under .court). */
+
+.court .match-row__vs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25em;
+}
+
+.court .match-row__sep {
+  font-family: var(--font-mono);
+  font-size: 0.75em;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-45);
+}
+
+.court .match-detail__title {
+  font-size: clamp(1.4rem, 3vw, 1.85rem);
+  line-height: 1.15;
+}
+
+.court .match-status {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.court .match-status--upcoming {
+  color: var(--court);
+}
+
+.court .match-status--completed {
+  color: var(--ink-70);
+}
+
+.court .match-status--cancelled {
+  color: #a33;
+}
+
+.court .badge.match-status--upcoming {
+  background: rgba(27, 67, 192, 0.1);
+  border-color: rgba(27, 67, 192, 0.35);
+  color: var(--court);
+}
+
+.court .badge.match-status--completed {
+  background: rgba(20, 20, 15, 0.06);
+}
+
+.court .badge.match-status--cancelled {
+  background: rgba(170, 51, 51, 0.1);
+  border-color: rgba(170, 51, 51, 0.35);
+  color: #a33;
+}
