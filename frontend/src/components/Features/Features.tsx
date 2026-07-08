@@ -3,7 +3,7 @@ import "./Features.css";
 
 export function Features() {
   return (
-    <section className="features" id="teams">
+    <section className="features" id="features">
       <div className="section-head" data-reveal>
         <h2 className="section-title">
           Built for the way amateurs actually play
