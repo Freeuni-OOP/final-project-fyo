@@ -8,8 +8,8 @@ import com.fyo.domain.MatchFormat;
 import com.fyo.domain.MatchStatus;
 import com.fyo.match.dto.MatchParticipantResponse;
 import com.fyo.match.dto.MatchResponse;
-import com.fyo.match.dto.SportResponse;
 import com.fyo.repository.MatchRepository;
+import com.fyo.team.dto.SportResponse;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -96,7 +96,15 @@ public class MatchService {
 
     private MatchParticipantResponse toParticipantResponse(User user, Team team) {
         if (user != null) {
-            return new MatchParticipantResponse(user.getId(), null, user.getName() + " " + user.getSurname(), user.getImageUrl());
+            return new MatchParticipantResponse(
+                    user.getId(),
+                    null,
+                    user.getName() + " " + user.getSurname(),
+                    user.getImageUrl()
+            );
+        }
+        if (team == null) {
+            throw new IllegalStateException("Match side is missing both user and team");
         }
         return new MatchParticipantResponse(null, team.getId(), team.getName(), team.getLogoUrl());
     }
