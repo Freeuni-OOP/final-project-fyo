@@ -47,18 +47,27 @@ function useHashRoute(): string {
   return hash;
 }
 
+/** True when the hash addresses `route` itself or a sub-path/query under it
+ *  (`#/login`, `#/login/x`, `#/login?y`) — but not a sibling like
+ *  `#/login-admin`, which a plain startsWith would swallow. */
+function matchesRoute(hash: string, route: string): boolean {
+  if (!hash.startsWith(route)) return false;
+  const next = hash.charAt(route.length);
+  return next === "" || next === "/" || next === "?";
+}
+
 export default function App() {
   const hash = useHashRoute();
 
-  if (hash.startsWith("#/teams")) {
+  if (matchesRoute(hash, "#/teams")) {
     return <TeamsView />;
   }
 
-  if (hash.startsWith("#/login")) {
+  if (matchesRoute(hash, "#/login")) {
     return <Login />;
   }
 
-  if (hash.startsWith("#/signup")) {
+  if (matchesRoute(hash, "#/signup")) {
     return <Signup />;
   }
 
