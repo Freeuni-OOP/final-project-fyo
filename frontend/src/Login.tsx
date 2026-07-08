@@ -2,8 +2,6 @@ import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebase";
 
-const LOGIN_ENDPOINT = "http://localhost:8081/api/auth/login";
-
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,21 +14,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const tokenId = await userCredential.user.getIdToken();
-
-      const response = await fetch(LOGIN_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${tokenId}`,
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Login failed");
-      }
+      await signInWithEmailAndPassword(auth, email, password);
       console.log("Login Successful");
     } catch (er) {
       if (er instanceof Error) {
