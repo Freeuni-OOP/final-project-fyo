@@ -55,16 +55,14 @@
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
+		<!-- firebase-admin verifies ID tokens server-side. It pulls no
+		     istack-commons-runtime (the copy on the classpath comes from
+		     hibernate-core -> jaxb-runtime), so no exclusions are needed:
+		     `mvn dependency:tree -Dverbose` is identical with and without. -->
 		<dependency>
 			<groupId>com.google.firebase</groupId>
 			<artifactId>firebase-admin</artifactId>
 			<version>9.4.1</version>
-			<exclusions>
-				<exclusion>
-					<groupId>com.sun.istack</groupId>
-					<artifactId>istack-commons-runtime</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
