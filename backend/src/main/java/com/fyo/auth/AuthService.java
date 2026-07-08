@@ -10,8 +10,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.regex.Pattern;
+
 @Service
 public class AuthService {
+
+    /**
+     * Practical shape check (something@domain.tld, no whitespace) applied to
+     * the email claim of the verified token. Firebase normally guarantees a
+     * valid email, so this only guards against malformed claims (e.g. custom
+     * tokens) reaching the unique-email column. Deliverability is out of
+     * scope. Bean Validation's @Email is not usable here because the email
+     * never arrives through a request DTO — only inside the token.
+     */
+    private static final Pattern EMAIL_FORMAT = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
     private final UserRepository userRepository;
     private final FirebaseTokenVerifier tokenVerifier;
@@ -32,6 +44,9 @@ public class AuthService {
         String email = token.getEmail();
         if (email == null || email.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Firebase token carries no email claim");
+        }
+        if (!EMAIL_FORMAT.matcher(email).matches()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Firebase token carries a malformed email address");
         }
 
         return userRepository.findByFirebaseUid(token.getUid())
@@ -61,6 +76,8 @@ public class AuthService {
                 email
         );
         // Profile is incomplete until the user finishes onboarding in the app.
+        // The onboarding flow (POST /api/onboarding, OnboardingService on the
+        // feature/onboarding-v2 branch until it merges) is what completes it.
         user.setOnboarding(true);
         return userRepository.save(user);
     }
