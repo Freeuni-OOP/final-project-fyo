@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebase";
-import { authRequest } from "./authApi";
+import { authRequest, AuthApiError } from "./authApi";
 import { Button, Wordmark } from "./teams/ui";
 import "./teams/theme.css";
 import "./teams/teams.css";
@@ -27,7 +27,17 @@ export default function Login() {
       // backend verifies that token and loads our local user for it.
       const credential = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await credential.user.getIdToken();
-      await authRequest("/api/auth/login", idToken);
+      try {
+        await authRequest("/api/auth/login", idToken);
+      } catch (err) {
+        // Firebase account exists but our DB row is missing (an earlier
+        // signup died halfway) — the idempotent signup endpoint creates it.
+        if (err instanceof AuthApiError && err.status === 404) {
+          await authRequest("/api/auth/signup", idToken);
+        } else {
+          throw err;
+        }
+      }
       window.location.hash = "#/teams";
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong during login");
@@ -61,6 +71,8 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? "login-error" : undefined}
             />
           </div>
 
@@ -72,10 +84,16 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? "login-error" : undefined}
             />
           </div>
 
-          {error && <p className="auth__error">{error}</p>}
+          {error && (
+            <p id="login-error" className="auth__error" role="alert">
+              {error}
+            </p>
+          )}
 
           <Button variant="solid" type="submit" disabled={loading}>
             {loading ? "Logging in…" : "Log in"}
