@@ -1,5 +1,13 @@
 const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8081";
 
+/** Thrown for any failed auth request; carries the HTTP status (0 = network). */
+export class AuthApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+    this.name = "AuthApiError";
+  }
+}
+
 export interface AuthUser {
   id: number;
   firebaseUid: string;
@@ -8,6 +16,9 @@ export interface AuthUser {
   name: string;
   surname: string;
   imageUrl: string | null;
+  /** True while the account still has to finish profile setup. The onboarding
+   *  flow (POST /api/onboarding — feature/onboarding-v2 until it merges)
+   *  completes it; route users with onboarding=true there after auth. */
   onboarding: boolean;
 }
 
@@ -30,19 +41,34 @@ export async function authRequest(
       },
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
-  } catch {
-    throw new Error("Can't reach the server. Is the backend running?");
+  } catch (err) {
+    console.error(`Auth request ${path} never reached the server:`, err);
+    throw new AuthApiError(
+      0,
+      "Can't reach the server — check your internet connection and that the backend is running, then try again."
+    );
   }
 
   if (!res.ok) {
-    let message = `Request failed (${res.status})`;
+    // Read the body once as text: it is logged raw for debugging, and only a
+    // well-formed { message } from it is ever shown to the user.
+    const raw = await res.text().catch(() => "");
+    console.error(`Auth request ${path} failed with ${res.status}:`, raw || "<empty body>");
+
+    let message: string | null = null;
     try {
-      const data = await res.json();
-      if (data?.message) message = data.message;
+      const data = JSON.parse(raw);
+      if (typeof data?.message === "string" && data.message) message = data.message;
     } catch {
-      /* non-JSON error body — keep the default message */
+      /* non-JSON error body — fall back to a status-based message below */
     }
-    throw new Error(message);
+    if (!message) {
+      message =
+        res.status >= 500
+          ? `Server error (${res.status}). Please try again in a moment — contact support if it keeps happening.`
+          : `Request failed (${res.status}${res.statusText ? ` ${res.statusText}` : ""}).`;
+    }
+    throw new AuthApiError(res.status, message);
   }
 
   return (await res.json()) as AuthUser;
