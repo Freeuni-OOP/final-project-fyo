@@ -30,9 +30,10 @@ public class FirebaseTokenVerifier {
     /**
      * The FirebaseApp is initialized on first use, not at startup, so the
      * application (and its tests) can run without Firebase credentials as long
-     * as no auth endpoint is called.
+     * as no auth endpoint is called. Package-private so tests can override it
+     * with a mocked FirebaseAuth instead of contacting Google.
      */
-    private synchronized FirebaseAuth firebaseAuth() {
+    synchronized FirebaseAuth firebaseAuth() {
         if (FirebaseApp.getApps().isEmpty()) {
             try {
                 FirebaseApp.initializeApp(FirebaseOptions.builder()
