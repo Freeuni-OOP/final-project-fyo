@@ -1,0 +1,66 @@
+.court.auth {
+  min-height: 100vh;
+}
+
+.court .auth__shell {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: clamp(40px, 6vw, 80px) var(--gutter) var(--pad-y);
+}
+
+.court .auth__form {
+  display: grid;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.court .auth__field {
+  display: grid;
+  gap: 6px;
+}
+
+.court .auth__field label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-45);
+}
+
+.court .auth__field input {
+  padding: 12px 14px;
+  border: 1px solid var(--hair-strong);
+  background: #fff;
+  font: inherit;
+  color: var(--ink);
+}
+
+.court .auth__field input:focus {
+  border-color: var(--ink);
+  outline: none;
+}
+
+.court .auth__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.court .auth__form .btn {
+  margin-top: 8px;
+}
+
+.court .auth__error {
+  margin: 0;
+  color: #b3261e;
+  font-size: 0.92rem;
+}
+
+.court .auth__alt {
+  margin-top: 22px;
+  color: var(--ink-70);
+}
+
+.court .auth__alt a {
+  text-decoration: underline;
+}
