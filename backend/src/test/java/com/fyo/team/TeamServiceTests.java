@@ -3,6 +3,7 @@ package com.fyo.team;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.fyo.TestcontainersConfig;
 import com.fyo.domain.Sport;
 import com.fyo.domain.TeamMemberRole;
 import com.fyo.domain.User;
@@ -16,11 +17,13 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @SpringBootTest
 @Transactional
+@Import(TestcontainersConfig.class)
 class TeamServiceTests {
 
     @Autowired
