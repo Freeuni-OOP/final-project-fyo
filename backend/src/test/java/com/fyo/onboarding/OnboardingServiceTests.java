@@ -45,15 +45,17 @@ class OnboardingServiceTests {
     // All seeded users already have usernames, so we need a fresh one.
     // -------------------------------------------------------------------------
     private User saveNewUnboardedUser(String firebaseUid, String email) {
+        // is_onboarding = TRUE means "still needs onboarding" (same as signup / project convention)
         entityManager.createNativeQuery(
-                        "INSERT INTO users (firebase_uid, name, surname, username, email) " +
-                                "VALUES (:uid, '', '', :username, :email)"
+                        "INSERT INTO users (firebase_uid, name, surname, username, email, is_onboarding) " +
+                                "VALUES (:uid, '', '', :username, :email, TRUE)"
                 )
                 .setParameter("uid", firebaseUid)
                 .setParameter("username", "tmp_" + UUID.randomUUID().toString().replace("-", "").substring(0, 10))
                 .setParameter("email", email)
                 .executeUpdate();
         entityManager.flush();
+        entityManager.clear();
         return userRepository.findByFirebaseUid(firebaseUid)
                 .orElseThrow(() -> new IllegalStateException("Test setup failed: user not found after insert"));
     }
@@ -188,6 +190,23 @@ class OnboardingServiceTests {
         )
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Username already taken");
+    }
+
+    @Test
+    void keepingOwnUsernameIsAllowed() {
+        User user = saveNewUnboardedUser(
+                "test-firebase-uid-keep-username",
+                "keep.username@test.com"
+        );
+        String ownUsername = user.getUsername();
+
+        OnboardingResponse response = onboardingService.completeOnboarding(
+                user.getId(),
+                buildValidRequest(ownUsername)
+        );
+
+        assertThat(response.username()).isEqualTo(ownUsername);
+        assertThat(response.onboardingCompleted()).isTrue();
     }
 
     // -------------------------------------------------------------------------
