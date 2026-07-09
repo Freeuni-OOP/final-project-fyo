@@ -1,0 +1,293 @@
+/* ── Form shell ─────────────────────────────────────────────── */
+.ob-form {
+    width: 100%;
+    max-width: 680px;
+}
+
+/* ── Progress bar ───────────────────────────────────────────── */
+.ob-form__progress {
+    height: 3px;
+    background: var(--hair);
+    margin-bottom: 36px;
+}
+.ob-form__progress-fill {
+    height: 100%;
+    width: var(--prog, 0%);
+    background: var(--court);
+    transition: width 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.ob-form__step-label {
+    margin-bottom: 10px;
+}
+
+/* ── Body ───────────────────────────────────────────────────── */
+.ob-form__body {
+    /* hook into global data-reveal */
+}
+
+.ob-form__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    line-height: 0.92;
+    letter-spacing: -0.015em;
+    text-transform: uppercase;
+}
+
+.ob-form__lead {
+    margin: 14px 0 32px;
+    font-size: 1rem;
+    line-height: 1.55;
+    color: var(--ink-70);
+    max-width: 48ch;
+}
+
+/* ── Field grid ─────────────────────────────────────────────── */
+.ob-form__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 28px;
+}
+
+.ob-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+.ob-field--full {
+    grid-column: 1 / -1;
+}
+
+.ob-field__label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-70);
+}
+.ob-field__req {
+    color: var(--court);
+}
+
+.ob-field__input {
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid var(--hair-strong);
+    border-radius: 2px;
+    padding: 11px 14px;
+    outline: none;
+    transition: border-color 0.16s ease;
+    width: 100%;
+    appearance: none;
+}
+.ob-field__input::placeholder {
+    color: var(--ink-45);
+}
+.ob-field__input:focus {
+    border-color: var(--court);
+}
+.ob-field__select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2346443c' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 38px;
+}
+
+/* ── Error ──────────────────────────────────────────────────── */
+.ob-form__error {
+    margin: 0 0 20px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.03em;
+    color: #c0392b;
+    border-left: 2px solid #c0392b;
+    padding-left: 10px;
+}
+
+/* ── Actions ────────────────────────────────────────────────── */
+.ob-form__actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 32px;
+}
+
+/* ── Buttons (action variant — actual <button> tags) ────────── */
+.ob-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 14px 22px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+.ob-btn--solid {
+    background: var(--ink);
+    color: var(--chalk);
+    border: 1px solid var(--ink);
+}
+.ob-btn--solid:hover:not(:disabled) {
+    background: var(--court);
+    border-color: var(--court);
+}
+.ob-btn--ghost {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--ink);
+}
+.ob-btn--ghost:hover:not(:disabled) {
+    background: var(--ink);
+    color: var(--chalk);
+}
+.ob-btn--disabled,
+.ob-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ── Sport picker list ──────────────────────────────────────── */
+.ob-sports {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--ink);
+}
+
+.ob-sport {
+    border-bottom: 1px solid var(--hair);
+    transition: border-color 0.16s ease;
+}
+.ob-sport--on {
+    border-color: var(--court);
+}
+
+.ob-sport__row {
+    display: grid;
+    grid-template-columns: 36px 1fr 28px;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    padding: clamp(14px, 2vw, 20px) 12px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    position: relative;
+    transition: padding-left 0.2s ease, background 0.2s ease;
+}
+
+/* cobalt wipe — mirrors Sports.tsx row hover */
+.ob-sport__row::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--court);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1);
+    z-index: 0;
+}
+.ob-sport--on .ob-sport__row::before,
+.ob-sport__row:hover::before {
+    transform: scaleX(1);
+}
+.ob-sport__row > * {
+    position: relative;
+    z-index: 1;
+}
+.ob-sport--on .ob-sport__row,
+.ob-sport__row:hover {
+    padding-left: 20px;
+}
+
+.ob-sport__no {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--ink-45);
+    transition: color 0.18s ease;
+}
+.ob-sport--on .ob-sport__no,
+.ob-sport__row:hover .ob-sport__no {
+    color: var(--optic);
+}
+
+.ob-sport__name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    transition: color 0.18s ease;
+}
+.ob-sport--on .ob-sport__name,
+.ob-sport__row:hover .ob-sport__name {
+    color: var(--chalk);
+}
+
+.ob-sport__check {
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    color: var(--ink-45);
+    transition: color 0.18s ease;
+    justify-self: end;
+}
+.ob-sport--on .ob-sport__check,
+.ob-sport__row:hover .ob-sport__check {
+    color: var(--optic);
+}
+
+/* ── Skill level pills ──────────────────────────────────────── */
+.ob-sport__levels {
+    display: flex;
+    gap: 8px;
+    padding: 0 12px 16px;
+    flex-wrap: wrap;
+}
+
+.ob-level {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 7px 14px;
+    border: 1px solid var(--hair-strong);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--ink-70);
+    cursor: pointer;
+    transition: background 0.16s ease, color 0.16s ease, border-color 0.16s ease;
+}
+.ob-level:hover {
+    border-color: var(--court);
+    color: var(--court);
+}
+.ob-level--on {
+    background: var(--optic);
+    border-color: var(--optic);
+    color: var(--ink);
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 560px) {
+    .ob-form__grid {
+        grid-template-columns: 1fr;
+    }
+    .ob-field--full {
+        grid-column: 1;
+    }
+}

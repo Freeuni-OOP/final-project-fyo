@@ -8,7 +8,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
 import java.time.Instant;
 
 @Entity
@@ -34,13 +33,11 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(name = "age")
     private Short age;
 
-    public enum Sex {
-        MALE, FEMALE, OTHER
-    }
-
     @Enumerated(EnumType.STRING)
+    @Column(name = "sex", length = 30)
     private Sex sex;
 
     private String region;
