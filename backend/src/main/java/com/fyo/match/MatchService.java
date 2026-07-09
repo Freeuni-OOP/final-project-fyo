@@ -11,6 +11,8 @@ import com.fyo.match.dto.MatchResponse;
 import com.fyo.repository.MatchRepository;
 import com.fyo.team.dto.SportResponse;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +20,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class MatchService {
+
+    private static final Logger log = LoggerFactory.getLogger(MatchService.class);
 
     private final MatchRepository matchRepository;
 
@@ -104,6 +108,7 @@ public class MatchService {
             );
         }
         if (team == null) {
+            log.error("Corrupted match state: side is missing both user and team");
             throw new IllegalStateException("Match side is missing both user and team");
         }
         return new MatchParticipantResponse(null, team.getId(), team.getName(), team.getLogoUrl());
