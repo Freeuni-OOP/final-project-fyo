@@ -1,4 +1,4 @@
-const BASE = "http://localhost:8081";
+const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8081";
 
 // TODO: replace with authenticated user ID from Firebase once
 //       Sandro's auth filter is merged (Task 1).
