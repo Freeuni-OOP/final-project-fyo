@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "./firebase";
-import { authRequest, AuthApiError } from "./authApi";
+import { useSession } from "./session/SessionContext";
 import { Button, Wordmark } from "./teams/ui";
 import "./teams/theme.css";
 import "./teams/teams.css";
@@ -12,6 +10,7 @@ const goHome = () => {
 };
 
 export default function Login() {
+  const { signIn } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -23,25 +22,11 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Firebase checks the password and returns a signed ID token; the
-      // backend verifies that token and loads our local user for it.
-      const credential = await signInWithEmailAndPassword(auth, email, password);
-      const idToken = await credential.user.getIdToken();
-      try {
-        await authRequest("/api/auth/login", idToken);
-      } catch (err) {
-        // Firebase account exists but our DB row is missing (an earlier
-        // signup died halfway) — the idempotent signup endpoint creates it.
-        if (err instanceof AuthApiError && err.status === 404) {
-          await authRequest("/api/auth/signup", idToken);
-        } else {
-          throw err;
-        }
-      }
-      window.location.hash = "#/teams";
+      // Firebase checks the password, the session exchanges the ID token for
+      // our local user, and App redirects off `#/login` once it lands.
+      await signIn(email, password);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong during login");
-    } finally {
       setLoading(false);
     }
   }
@@ -96,7 +81,7 @@ export default function Login() {
           )}
 
           <Button variant="solid" type="submit" disabled={loading}>
-            {loading ? "Logging in…" : "Log in"}
+            {loading ? "Logging in..." : "Log in"}
           </Button>
         </form>
 
