@@ -9,7 +9,9 @@ export function TopBar() {
       <nav className="bar__nav" aria-label="Primary">
         <a href="#sports">Sports</a>
         <a href="#how">How it works</a>
-        <a href="#/teams">Teams</a>
+        <a href="#teams">Teams</a>
+        <a href="#/login">Log in</a>
+        <a href="#/signup">Sign up</a>
       </nav>
       <Button href="#join" className="bar__cta">
         Find a game

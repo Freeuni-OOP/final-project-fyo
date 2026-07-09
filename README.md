@@ -51,6 +51,28 @@ Backend runs at:
 http://localhost:8081
 ```
 
+### Firebase Admin credentials (needed for /api/auth)
+
+The auth endpoints (`/api/auth/signup`, `/api/auth/login`) verify Firebase ID
+tokens with the Firebase Admin SDK, which needs a service account key:
+
+1. Firebase console → Project settings → Service accounts → Generate new
+   private key. Save the JSON somewhere outside the repo (never commit it).
+2. Point the backend at it before starting:
+
+```powershell
+$env:GOOGLE_APPLICATION_CREDENTIALS = "C:\path\to\serviceAccountKey.json"
+.\mvnw.cmd spring-boot:run
+```
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/serviceAccountKey.json
+./mvnw spring-boot:run
+```
+
+Without it the backend still starts and everything except `/api/auth/*` works;
+auth calls return a clear error asking for the credentials.
+
 ## Run Frontend
 
 ```bash
