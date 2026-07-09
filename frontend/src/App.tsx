@@ -5,6 +5,7 @@ import { AppShell } from "./app/AppShell";
 import { Dashboard } from "./app/pages/Dashboard";
 import { TeamsPage } from "./app/pages/TeamsPage";
 import { Splash } from "./app/Splash";
+import { SessionError } from "./app/SessionError";
 import { isRoot, matchesRoute, Redirect, useHashRoute } from "./routing";
 import { useSession } from "./session/SessionContext";
 import Login from "./Login";
@@ -24,6 +25,10 @@ export default function App() {
   const { status, user } = useSession();
 
   if (status === "loading") return <Splash />;
+
+  // A Firebase session we couldn't back with an account. Don't route around it:
+  // every page would misbehave, and the failure has to be visible somewhere.
+  if (status === "error") return <SessionError />;
 
   const authed = status === "authed" && user !== null;
 

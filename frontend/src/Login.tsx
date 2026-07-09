@@ -10,11 +10,15 @@ const goHome = () => {
 };
 
 export default function Login() {
-  const { signIn } = useSession();
+  const { signIn, error: sessionError } = useSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // A session that failed to restore lands the user here carrying its reason
+  // (e.g. a Firebase identity with no account). This attempt's error wins.
+  const shownError = error ?? sessionError;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -56,8 +60,8 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              aria-invalid={error ? true : undefined}
-              aria-describedby={error ? "login-error" : undefined}
+              aria-invalid={shownError ? true : undefined}
+              aria-describedby={shownError ? "login-error" : undefined}
             />
           </div>
 
@@ -69,14 +73,14 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              aria-invalid={error ? true : undefined}
-              aria-describedby={error ? "login-error" : undefined}
+              aria-invalid={shownError ? true : undefined}
+              aria-describedby={shownError ? "login-error" : undefined}
             />
           </div>
 
-          {error && (
+          {shownError && (
             <p id="login-error" className="auth__error" role="alert">
-              {error}
+              {shownError}
             </p>
           )}
 
