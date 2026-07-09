@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { FirebaseError } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
@@ -45,7 +45,7 @@ export default function Signup() {
 
     try {
       // Firebase owns the credentials. The backend gets only the signed ID
-      // token (identity) plus extra profile fields — never email/uid in the
+      // token (identity) plus extra profile fields ΓÇö never email/uid in the
       // body, they are read from the verified token server-side.
       let credential: UserCredential;
       try {
@@ -53,7 +53,7 @@ export default function Signup() {
       } catch (err) {
         // The Firebase account can exist without our DB row (e.g. an earlier
         // signup died before reaching the backend). If the password matches,
-        // sign in instead — the backend signup below is idempotent and will
+        // sign in instead ΓÇö the backend signup below is idempotent and will
         // create the missing local user.
         if (err instanceof FirebaseError && err.code === "auth/email-already-in-use") {
           credential = await signInWithEmailAndPassword(auth, email, password);
@@ -63,7 +63,15 @@ export default function Signup() {
       }
       const idToken = await credential.user.getIdToken();
       await authRequest("/api/auth/signup", idToken, { name, surname });
-      window.location.hash = "#/teams";
+      // Prefill onboarding form with names we already collected here
+      try {
+        sessionStorage.setItem("fyo.signupName", name.trim());
+        sessionStorage.setItem("fyo.signupSurname", surname.trim());
+      } catch {
+        /* private mode etc. */
+      }
+      window.location.hash = "#/onboarding";
+
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong during signup");
     } finally {
@@ -79,7 +87,7 @@ export default function Signup() {
           <a href="#/teams">Teams</a>
         </nav>
         <Button variant="ghost" className="bar__cta" onClick={goHome}>
-          ← Home
+          ΓåÉ Home
         </Button>
       </header>
 
@@ -163,7 +171,7 @@ export default function Signup() {
           )}
 
           <Button variant="solid" type="submit" disabled={loading}>
-            {loading ? "Signing up…" : "Sign up"}
+            {loading ? "Signing upΓÇª" : "Sign up"}
           </Button>
         </form>
 
