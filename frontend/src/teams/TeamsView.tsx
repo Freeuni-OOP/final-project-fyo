@@ -231,6 +231,7 @@ export function TeamsView() {
           teamId={openId}
           onClose={() => setOpenId(null)}
           onJoined={handleJoined}
+          currentUserId={1}
         />
       )}
     </div>

@@ -44,3 +44,16 @@ export interface TeamDetails extends TeamSummary {
   createdAt: string;
   members: TeamMember[];
 }
+
+export type JoinRequestStatus = "PENDING" | "ACCEPTED" | "DECLINED";
+
+export interface JoinRequest {
+  id: number;
+  teamId: number;
+  userId: number;
+  username: string;
+  fullName: string;
+  imageUrl: string | null;
+  status: JoinRequestStatus;
+  createdAt: string;
+}
