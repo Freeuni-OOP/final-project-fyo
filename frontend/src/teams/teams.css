@@ -791,3 +791,39 @@
   font-size: 0.76rem;
   color: #b3261e;
 }
+
+.court .jr__actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.court .jr__btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 2px;
+  border: 1px solid var(--hair-strong);
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.court .jr__btn--accept {
+  color: var(--court);
+}
+
+.court .jr__btn--accept:hover {
+  background: var(--optic);
+  border-color: var(--optic);
+  color: var(--ink);
+}
+
+.court .jr__btn--decline:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--chalk);
+}
