@@ -100,6 +100,7 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
       setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
       const updated = await teamsApi.get(teamId);
       setTeam(updated);
+      onJoined?.(updated);
     } catch (err) {
       alert((err as ApiError).message);
     }
