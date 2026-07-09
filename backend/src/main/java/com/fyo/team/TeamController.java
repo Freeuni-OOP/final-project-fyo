@@ -21,6 +21,17 @@ public class TeamController {
         return teamService.getTeams();
     }
 
+    /** Declared before `/{id}`, which would otherwise try to parse "mine" as an id. */
+    @GetMapping("/mine")
+    public List<MyTeamResponse> getMyTeams(@RequestParam Long userId) {
+        return teamService.getTeamsForUser(userId);
+    }
+
+    @GetMapping("/my-requests")
+    public List<MyJoinRequestResponse> getMyJoinRequests(@RequestParam Long userId) {
+        return teamService.getJoinRequestsForUser(userId);
+    }
+
     @GetMapping("/{id}")
     public TeamDetailsResponse getTeam(@PathVariable Long id) {
         return teamService.getTeam(id);
