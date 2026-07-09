@@ -3,9 +3,9 @@ spring:
     name: fyo
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/fyo_platform
-    username: fyo_user
-    password: fyo_password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/fyo_platform}
+    username: ${SPRING_DATASOURCE_USERNAME:fyo_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:fyo_password}
 
   jpa:
     hibernate:
@@ -20,4 +20,5 @@ spring:
     locations: classpath:db/migration
 
 server:
-  port: 8081
+  # Railway and most PaaS inject the port to bind on as PORT.
+  port: ${PORT:8081}
