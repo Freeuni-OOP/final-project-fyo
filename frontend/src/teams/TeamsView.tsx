@@ -12,7 +12,7 @@ const goHome = () => {
 /** Public, signed-out view of the team list. Signed-in users are routed to
  *  `#/app/teams`, which renders the same board inside the platform shell. */
 export function TeamsView() {
-  const { teams, loading, error, reload, applyRosterChange } = useTeams();
+  const { teams, loading, error, reload } = useTeams();
 
   const sportCount = useMemo(
     () => new Set(teams.map((t) => t.sport.name)).size,
@@ -71,7 +71,7 @@ export function TeamsView() {
           loading={loading}
           error={error}
           onRetry={reload}
-          onRosterChange={applyRosterChange}
+          basePath="#/teams"
         />
       </section>
 

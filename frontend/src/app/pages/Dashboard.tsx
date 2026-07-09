@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { matchesApi, type Match, type MatchStatus } from "../../api/matches";
 import { ApiError } from "../../api/http";
 import { TeamRow } from "../../teams/TeamsBoard";
-import { TeamDetail } from "../../teams/TeamDetail";
 import { useTeams } from "../../teams/useTeams";
 import { useReveal } from "../../teams/useReveal";
 import { displayNameOf, useSession } from "../../session/SessionContext";
@@ -63,9 +62,8 @@ function useMyMatches(userId: number | undefined) {
 
 export function Dashboard() {
   const { user } = useSession();
-  const { teams, loading: teamsLoading, applyRosterChange } = useTeams();
+  const { teams, loading: teamsLoading } = useTeams();
   const { matches, loading: matchesLoading, error: matchesError } = useMyMatches(user?.id);
-  const [openTeamId, setOpenTeamId] = useState<number | null>(null);
 
   const upcoming = useMemo(
     () => matches.filter((m) => m.status === "UPCOMING"),
@@ -164,20 +162,11 @@ export function Dashboard() {
         {!teamsLoading && recruiting.length > 0 && (
           <ul className="grid">
             {recruiting.slice(0, 5).map((t, i) => (
-              <TeamRow key={t.id} team={t} index={i} onOpen={() => setOpenTeamId(t.id)} />
+              <TeamRow key={t.id} team={t} index={i} href={`#/app/teams/${t.id}`} />
             ))}
           </ul>
         )}
       </section>
-
-      {openTeamId !== null && (
-        <TeamDetail
-          teamId={openTeamId}
-          onClose={() => setOpenTeamId(null)}
-          onJoined={applyRosterChange}
-          currentUserId={user?.id}
-        />
-      )}
     </>
   );
 }
