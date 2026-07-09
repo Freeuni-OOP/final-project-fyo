@@ -44,6 +44,7 @@ export const matchesApi = {
     return request<Match[]>(`/api/matches${qs ? `?${qs}` : ""}`);
   },
   get: (id: number) => request<Match>(`/api/matches/${id}`),
+  // Backend MatchController takes actingUserId as @RequestParam on POST, not a JSON body.
   cancel: (id: number, actingUserId: number) =>
     request<Match>(`/api/matches/${id}/cancel?actingUserId=${actingUserId}`, {
       method: "POST",
