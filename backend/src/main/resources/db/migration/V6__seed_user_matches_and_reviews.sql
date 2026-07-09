@@ -5,9 +5,9 @@ INSERT INTO matches (sport_id, format, home_user_id, away_user_id, location, pro
 SELECT s.id, v.format, home_user.id, away_user.id, v.location, v.proposed_datetime::timestamptz, v.status
 FROM (
     VALUES
-    ('Tennis', '1V1', 'niko_k', 'mariam_b', 'Vake Tennis Club, Tbilisi', '2026-05-10 17:00:00+04', 'COMPLETED'),
-    ('Padel', '1V1', 'gio_abashidze', 'ana_j', 'Batumi Padel Court', '2026-05-12 18:30:00+04', 'COMPLETED'),
-    ('Badminton', '1V1', 'niko_k', 'luka_d', 'Saburtalo Sports Hall, Tbilisi', '2026-06-20 19:00:00+04', 'UPCOMING')
+    ('Tennis', 'ONE_VS_ONE', 'niko_k', 'mariam_b', 'Vake Tennis Club, Tbilisi', '2026-05-10 17:00:00+04', 'COMPLETED'),
+    ('Padel', 'ONE_VS_ONE', 'gio_abashidze', 'ana_j', 'Batumi Padel Court', '2026-05-12 18:30:00+04', 'COMPLETED'),
+    ('Badminton', 'ONE_VS_ONE', 'niko_k', 'luka_d', 'Saburtalo Sports Hall, Tbilisi', '2026-06-20 19:00:00+04', 'UPCOMING')
 ) AS v(sport_name, format, home_username, away_username, location, proposed_datetime, status)
 JOIN sports s ON s.sport_name = v.sport_name
 JOIN users home_user ON home_user.username = v.home_username
