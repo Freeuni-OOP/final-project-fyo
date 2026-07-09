@@ -78,6 +78,8 @@ public class ProfileService {
         user.setImageUrl(request.imageUrl());
 
         userSportRepository.deleteByUserId(user.getId());
+        // Flush so the unique (user_id, sport_id) rows are gone before re-insert.
+        userSportRepository.flush();
         List<UserSport> newSports = request.sports().stream()
                 .map(dto -> toUserSport(user, dto))
                 .toList();

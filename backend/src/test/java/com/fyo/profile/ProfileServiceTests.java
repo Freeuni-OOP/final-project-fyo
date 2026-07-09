@@ -153,6 +153,7 @@ class ProfileServiceTests {
         assertThat(response.sports().getFirst().skillLevel()).isEqualTo("INTERMEDIATE");
 
         verify(userSportRepository).deleteByUserId(1L);
+        verify(userSportRepository).flush();
         verify(userSportRepository).saveAll(anyList());
         verify(userRepository).save(user);
     }
