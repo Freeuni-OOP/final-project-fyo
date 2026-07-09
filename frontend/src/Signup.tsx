@@ -1,58 +1,92 @@
 import { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth"; //function from firebase that creates account.
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebase";
 
 const SIGNUP_ENDPOINT = "http://localhost:8081/api/auth/signup";
-export default function Signup(){
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [error, setError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
 
-    async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-        e.preventDefault();
-        setError(null);
-        setLoading(true);
+export default function Signup() {
+  const [name, setName] = useState("");
+  const [surname, setSurname] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-        try{
-            const userCredential = await createUserWithEmailAndPassword(
-                auth,
-                email,
-                password
-            );
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
 
-            const tokenId = await userCredential.user.getIdToken();
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
 
-            //HTTP request to SPRINGBOOT
-            const response = await fetch(SIGNUP_ENDPOINT, {
-                method: "POST", //we are posting
-                headers: {
-                    "Content-Type": "application/json", //we are sending JSON file
-                    Authorization: `Bearer ${tokenId}`, //attach auth token to request
-                },
-                body: JSON.stringify({email}), //sending actual data
-            });
-            
-            if(!response.ok){
-                throw new Error("Signup failed");
-            }
-            console.log("Signup Successful");
-        }
-        catch (err){
-            if(err instanceof Error){
-                setError(err.message);
-            }
-            else{
-                setError("something went wrong during signup");
-            }
-        }
-        finally{
-            setLoading(false);
-        }
+      const tokenId = await userCredential.user.getIdToken();
+
+      const response = await fetch(SIGNUP_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${tokenId}`,
+        },
+        body: JSON.stringify({
+          email,
+          name: name.trim(),
+          surname: surname.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Signup failed");
+      }
+
+      // Prefill onboarding form (first/last name asked here, not again)
+      try {
+        sessionStorage.setItem("fyo.signupName", name.trim());
+        sessionStorage.setItem("fyo.signupSurname", surname.trim());
+      } catch {
+        /* private mode etc. */
+      }
+
+      window.location.hash = "#/onboarding";
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("something went wrong during signup");
+      }
+    } finally {
+      setLoading(false);
     }
+  }
 
-    return (
+  return (
     <form onSubmit={handleSubmit}>
+      <div>
+        <label htmlFor="name">First name</label>
+        <input
+          id="name"
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+        />
+      </div>
+
+      <div>
+        <label htmlFor="surname">Last name</label>
+        <input
+          id="surname"
+          type="text"
+          value={surname}
+          onChange={(e) => setSurname(e.target.value)}
+          required
+        />
+      </div>
+
       <div>
         <label htmlFor="email">Email</label>
         <input
@@ -84,4 +118,3 @@ export default function Signup(){
     </form>
   );
 }
-
