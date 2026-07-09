@@ -1,8 +1,15 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebase";
+import { authRequest, AuthApiError } from "./authApi";
+import { Button, Wordmark } from "./teams/ui";
+import "./teams/theme.css";
+import "./teams/teams.css";
+import "./auth.css";
 
-const LOGIN_ENDPOINT = "http://localhost:8081/api/auth/login";
+const goHome = () => {
+  window.location.hash = "#/";
+};
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -16,62 +23,87 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const tokenId = await userCredential.user.getIdToken();
-
-      const response = await fetch(LOGIN_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${tokenId}`,
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Login failed");
+      // Firebase checks the password and returns a signed ID token; the
+      // backend verifies that token and loads our local user for it.
+      const credential = await signInWithEmailAndPassword(auth, email, password);
+      const idToken = await credential.user.getIdToken();
+      try {
+        await authRequest("/api/auth/login", idToken);
+      } catch (err) {
+        // Firebase account exists but our DB row is missing (an earlier
+        // signup died halfway) — the idempotent signup endpoint creates it.
+        if (err instanceof AuthApiError && err.status === 404) {
+          await authRequest("/api/auth/signup", idToken);
+        } else {
+          throw err;
+        }
       }
-      console.log("Login Successful");
-    } catch (er) {
-      if (er instanceof Error) {
-        setError(er.message);
-      } else {
-        setError("Something went wrong during login");
-      }
+      window.location.hash = "#/teams";
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong during login");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label htmlFor="email">Email</label>
-        <input
-          id="email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-      </div>
+    <div className="court auth">
+      <header className="bar">
+        <Wordmark onClick={goHome} />
+        <nav className="bar__nav" aria-label="Primary">
+          <a href="#/teams">Teams</a>
+        </nav>
+        <Button variant="ghost" className="bar__cta" onClick={goHome}>
+          ← Home
+        </Button>
+      </header>
 
-      <div>
-        <label htmlFor="password">Password</label>
-        <input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-      </div>
+      <main className="auth__shell">
+        <p className="eyebrow">Welcome back</p>
+        <h1 className="section-title">Log in</h1>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
+        <form className="auth__form" onSubmit={handleSubmit}>
+          <div className="auth__field">
+            <label htmlFor="login-email">Email</label>
+            <input
+              id="login-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? "login-error" : undefined}
+            />
+          </div>
 
-      <button type="submit" disabled={loading}>
-        {loading ? "Logging in..." : "Log in"}
-      </button>
-    </form>
+          <div className="auth__field">
+            <label htmlFor="login-password">Password</label>
+            <input
+              id="login-password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? "login-error" : undefined}
+            />
+          </div>
+
+          {error && (
+            <p id="login-error" className="auth__error" role="alert">
+              {error}
+            </p>
+          )}
+
+          <Button variant="solid" type="submit" disabled={loading}>
+            {loading ? "Logging in…" : "Log in"}
+          </Button>
+        </form>
+
+        <p className="auth__alt">
+          No account yet? <a href="#/signup">Sign up</a>
+        </p>
+      </main>
+    </div>
   );
 }
