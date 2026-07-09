@@ -60,17 +60,16 @@ class MatchServiceTests {
 
     @Test
     void getMatchesFiltersByTeamId() {
-        Team team = teamRepository.findAll().stream()
-                .filter(t -> !t.isArchived())
-                .findFirst()
-                .orElseThrow();
+        Match saved = saveUpcomingTeamMatch();
+        Long teamId = saved.getHomeTeam().getId();
 
-        List<MatchResponse> matches = matchService.getMatches(null, team.getId());
+        List<MatchResponse> matches = matchService.getMatches(null, teamId);
 
         assertThat(matches).isNotEmpty();
+        assertThat(matches).anyMatch(m -> m.id().equals(saved.getId()));
         assertThat(matches).allMatch(m ->
                 m.format() == MatchFormat.TEAM_VS_TEAM
-                        && (team.getId().equals(m.home().teamId()) || team.getId().equals(m.away().teamId()))
+                        && (teamId.equals(m.home().teamId()) || teamId.equals(m.away().teamId()))
         );
     }
 
@@ -86,10 +85,12 @@ class MatchServiceTests {
         );
 
         List<MatchResponse> forHome = matchService.getMatches(home.getId(), null);
+        List<MatchResponse> forAway = matchService.getMatches(away.getId(), null);
 
-        assertThat(forHome).anyMatch(m -> m.id().equals(saved.getId()));
-        assertThat(forHome.stream().filter(m -> m.id().equals(saved.getId())).findFirst())
-                .get()
+        assertThat(forAway).anyMatch(m -> m.id().equals(saved.getId()));
+        assertThat(forHome)
+                .filteredOn(m -> m.id().equals(saved.getId()))
+                .singleElement()
                 .satisfies(m -> {
                     assertThat(m.format()).isEqualTo(MatchFormat.ONE_VS_ONE);
                     assertThat(m.home().userId()).isEqualTo(home.getId());
@@ -123,12 +124,7 @@ class MatchServiceTests {
 
     @Test
     void cancelMatchAsCaptainSucceedsForUpcomingTeamMatch() {
-        Match upcoming = matchRepository.findAll().stream()
-                .filter(m -> m.getStatus() == MatchStatus.UPCOMING)
-                .filter(m -> m.getFormat() == MatchFormat.TEAM_VS_TEAM)
-                .findFirst()
-                .orElseThrow();
-
+        Match upcoming = saveUpcomingTeamMatch();
         Long captainId = upcoming.getHomeTeam().getCaptain().getId();
 
         MatchResponse cancelled = matchService.cancelMatch(upcoming.getId(), captainId);
@@ -157,12 +153,28 @@ class MatchServiceTests {
     }
 
     @Test
+    void cancelMatchAsOneVsOneNonParticipantIsRejected() {
+        List<User> users = userRepository.findAll();
+        User home = users.get(0);
+        User away = users.get(1);
+        User outsider = users.get(2);
+        Sport sport = sportRepository.findAll().getFirst();
+
+        Match saved = matchRepository.save(
+                Match.oneVsOne(sport, home, away, "Cancel court", OffsetDateTime.now().plusDays(2))
+        );
+
+        assertThatThrownBy(() -> matchService.cancelMatch(saved.getId(), outsider.getId()))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(ex -> {
+                    ResponseStatusException rse = (ResponseStatusException) ex;
+                    assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+                });
+    }
+
+    @Test
     void cancelMatchRejectsNonParticipant() {
-        Match upcoming = matchRepository.findAll().stream()
-                .filter(m -> m.getStatus() == MatchStatus.UPCOMING)
-                .filter(m -> m.getFormat() == MatchFormat.TEAM_VS_TEAM)
-                .findFirst()
-                .orElseThrow();
+        Match upcoming = saveUpcomingTeamMatch();
 
         Long homeCaptainId = upcoming.getHomeTeam().getCaptain().getId();
         Long awayCaptainId = upcoming.getAwayTeam().getCaptain().getId();
@@ -182,11 +194,7 @@ class MatchServiceTests {
 
     @Test
     void cancelMatchRejectsNonUpcomingMatch() {
-        Match upcoming = matchRepository.findAll().stream()
-                .filter(m -> m.getStatus() == MatchStatus.UPCOMING)
-                .filter(m -> m.getFormat() == MatchFormat.TEAM_VS_TEAM)
-                .findFirst()
-                .orElseThrow();
+        Match upcoming = saveUpcomingTeamMatch();
         Long captainId = upcoming.getHomeTeam().getCaptain().getId();
 
         matchService.cancelMatch(upcoming.getId(), captainId);
@@ -198,5 +206,25 @@ class MatchServiceTests {
                     assertThat(rse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
                     assertThat(rse.getReason()).contains("Only an upcoming match can be cancelled");
                 });
+    }
+
+    private Match saveUpcomingTeamMatch() {
+        List<Team> teams = teamRepository.findAll().stream()
+                .filter(t -> !t.isArchived())
+                .toList();
+        Team home = teams.get(0);
+        Team away = teams.stream()
+                .filter(t -> !t.getId().equals(home.getId()))
+                .filter(t -> t.getSport().getId().equals(home.getSport().getId()))
+                .findFirst()
+                .orElseThrow();
+
+        return matchRepository.save(Match.teamVsTeam(
+                home.getSport(),
+                home,
+                away,
+                "Team court",
+                OffsetDateTime.now().plusDays(1)
+        ));
     }
 }
