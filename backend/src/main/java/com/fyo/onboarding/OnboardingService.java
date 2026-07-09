@@ -1,5 +1,6 @@
 package com.fyo.onboarding;
 
+import com.fyo.domain.Sex;
 import com.fyo.domain.SkillLevel;
 import com.fyo.domain.Sport;
 import com.fyo.domain.User;
@@ -18,6 +19,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+/**
+ * Completes a new user's profile. Project-wide meaning of {@code is_onboarding}:
+ * <ul>
+ *   <li>{@code true} — still needs onboarding (e.g. right after signup)</li>
+ *   <li>{@code false} — profile onboarding finished</li>
+ * </ul>
+ */
 @Service
 public class OnboardingService {
 
@@ -40,17 +48,16 @@ public class OnboardingService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        if (user.isOnboarding()) {
+        // true = still needs onboarding; false = already finished
+        if (!user.isOnboarding()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Onboarding already completed");
         }
 
         String requestedUsername = request.username().trim();
-        if (userRepository.existsByUsername(requestedUsername)) {
+        if (!requestedUsername.equals(user.getUsername())
+                && userRepository.existsByUsername(requestedUsername)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
         }
-
-        SkillLevel skillLevel;
-        Sex sex;
 
         user.setName(request.name().trim());
         user.setSurname(request.surname().trim());
@@ -59,7 +66,7 @@ public class OnboardingService {
         user.setSex(parseSex(request.sex()));
         user.setRegion(request.region());
         user.setImageUrl(request.imageUrl());
-        user.setOnboarding(true);
+        user.setOnboarding(false);
 
         userSportRepository.deleteByUserId(userId);
 
@@ -77,7 +84,8 @@ public class OnboardingService {
     public OnboardingStatusResponse getOnboardingStatus(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-        return new OnboardingStatusResponse(user.isOnboarding());
+        // API field is "completed"; flag true means still onboarding
+        return new OnboardingStatusResponse(!user.isOnboarding());
     }
 
     private UserSport toUserSport(User user, UserSportDto dto) {
@@ -98,9 +106,9 @@ public class OnboardingService {
         }
     }
 
-    private com.fyo.domain.Sex parseSex(String value) {
+    private Sex parseSex(String value) {
         try {
-            return com.fyo.domain.Sex.valueOf(value.toUpperCase());
+            return Sex.valueOf(value.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "Invalid sex value: " + value +
@@ -118,7 +126,7 @@ public class OnboardingService {
                 user.getSex().name(),
                 user.getRegion(),
                 user.getImageUrl(),
-                user.isOnboarding(),
+                !user.isOnboarding(),
                 sports.stream().map(this::toUserSportResponse).toList()
         );
     }
