@@ -1,4 +1,4 @@
-import type { TeamDetails, TeamSummary } from "./types";
+import type { TeamDetails, TeamSummary, JoinRequest } from "./types";
 
 const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8081";
 
@@ -42,5 +42,20 @@ export const teamsApi = {
     request<TeamDetails>(`/api/teams/${id}/join`, {
       method: "POST",
       body: JSON.stringify({ userId }),
+    }),
+
+  requestToJoin: (teamId: number, userId: number) =>
+    request<JoinRequest>(`/api/teams/${teamId}/join-requests?userId=${userId}`, {
+      method: "POST",
+    }),
+  getPendingRequests: (teamId: number) =>
+    request<JoinRequest[]>(`/api/teams/${teamId}/join-requests`),
+  acceptRequest: (teamId: number, requestId: number) =>
+    request<JoinRequest>(`/api/teams/${teamId}/join-requests/${requestId}/accept`, {
+      method: "POST",
+    }),
+  declineRequest: (teamId: number, requestId: number) =>
+    request<JoinRequest>(`/api/teams/${teamId}/join-requests/${requestId}/decline`, {
+      method: "POST",
     }),
 };
