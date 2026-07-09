@@ -9,9 +9,11 @@
 
 ```bash
 cd backend
-cp .env.example .env
 docker compose up -d
 ```
+
+Compose uses defaults that match the backend (`fyo_platform` / `fyo_user` / `fyo_password` on port `5432`).  
+Optional: `cp .env.example .env` if you want to override ports or credentials.
 
 Adminer is available at:
 
@@ -49,12 +51,34 @@ Backend runs at:
 http://localhost:8081
 ```
 
+### Firebase Admin credentials (needed for /api/auth)
+
+The auth endpoints (`/api/auth/signup`, `/api/auth/login`) verify Firebase ID
+tokens with the Firebase Admin SDK, which needs a service account key:
+
+1. Firebase console → Project settings → Service accounts → Generate new
+   private key. Save the JSON somewhere outside the repo (never commit it).
+2. Point the backend at it before starting:
+
+```powershell
+$env:GOOGLE_APPLICATION_CREDENTIALS = "C:\path\to\serviceAccountKey.json"
+.\mvnw.cmd spring-boot:run
+```
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/serviceAccountKey.json
+./mvnw spring-boot:run
+```
+
+Without it the backend still starts and everything except `/api/auth/*` works;
+auth calls return a clear error asking for the credentials.
+
 ## Run Frontend
 
 ```bash
 cd frontend
-cp .env.example .env
-npm install  (this is not required on every run only when you add new npm packages or pulling project  the first time )
+cp .env.example .env   # needed for Firebase; Teams API defaults to http://localhost:8081
+npm install            # first clone, or after dependency changes
 npm run dev
 ```
 
@@ -64,6 +88,8 @@ Frontend runs at:
 http://localhost:5173
 ```
 
+Open **Teams** in the top nav (or go to `http://localhost:5173/#/teams`) with the backend running to browse seeded teams.
+
 ## Notes
 
 Flyway runs database migrations automatically when the backend starts.
@@ -72,7 +98,7 @@ To reset the local database during development:
 
 ```bash
 cd backend
-docker compose down -v     (this deletes all the data in db frtxilad amis gashvebisas)
+docker compose down -v
 docker compose up -d
 ```
 
