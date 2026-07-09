@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { FirebaseError } from "firebase/app";
 import {
   createUserWithEmailAndPassword,
@@ -12,9 +12,19 @@ import "./teams/theme.css";
 import "./teams/teams.css";
 import "./auth.css";
 
+const CURRENT_USER_ID_KEY = "fyo.currentUserId";
+
 const goHome = () => {
   window.location.hash = "#/";
 };
+
+function storeCurrentUserId(userId: number) {
+  try {
+    sessionStorage.setItem(CURRENT_USER_ID_KEY, String(userId));
+  } catch {
+    /* ignore storage failures */
+  }
+}
 
 export default function Signup() {
   const [name, setName] = useState("");
@@ -26,8 +36,6 @@ export default function Signup() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Mismatch is shown live once the user has left the confirm field, so they
-  // aren't scolded while still typing.
   const passwordsMatch = password === passwordConfirm;
   const showMismatch = confirmTouched && passwordConfirm !== "" && !passwordsMatch;
 
@@ -44,34 +52,29 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      // Firebase owns the credentials. The backend gets only the signed ID
-      // token (identity) plus extra profile fields ΓÇö never email/uid in the
-      // body, they are read from the verified token server-side.
       let credential: UserCredential;
       try {
         credential = await createUserWithEmailAndPassword(auth, email, password);
       } catch (err) {
-        // The Firebase account can exist without our DB row (e.g. an earlier
-        // signup died before reaching the backend). If the password matches,
-        // sign in instead ΓÇö the backend signup below is idempotent and will
-        // create the missing local user.
         if (err instanceof FirebaseError && err.code === "auth/email-already-in-use") {
           credential = await signInWithEmailAndPassword(auth, email, password);
         } else {
           throw err;
         }
       }
+
       const idToken = await credential.user.getIdToken();
-      await authRequest("/api/auth/signup", idToken, { name, surname });
-      // Prefill onboarding form with names we already collected here
+      const authUser = await authRequest("/api/auth/signup", idToken, { name, surname });
+      storeCurrentUserId(authUser.id);
+
       try {
         sessionStorage.setItem("fyo.signupName", name.trim());
         sessionStorage.setItem("fyo.signupSurname", surname.trim());
       } catch {
         /* private mode etc. */
       }
-      window.location.hash = "#/onboarding";
 
+      window.location.hash = "#/onboarding";
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong during signup");
     } finally {
