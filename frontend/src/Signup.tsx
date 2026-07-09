@@ -87,7 +87,7 @@ export default function Signup() {
           <a href="#/teams">Teams</a>
         </nav>
         <Button variant="ghost" className="bar__cta" onClick={goHome}>
-          ΓåÉ Home
+          Home
         </Button>
       </header>
 
@@ -171,7 +171,7 @@ export default function Signup() {
           )}
 
           <Button variant="solid" type="submit" disabled={loading}>
-            {loading ? "Signing upΓÇª" : "Sign up"}
+            {loading ? "Signing up" : "Sign up"}
           </Button>
         </form>
 
