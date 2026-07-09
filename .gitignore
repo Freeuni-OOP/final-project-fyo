@@ -7,3 +7,5 @@ frontend/dist/
 frontend/.env
 *.tsbuildinfo
 *firebase-adminsdk*.json
+.agents
+.findyouropponent-1e269-firebase-adminsdk-fbsvc-341c0c6a5c.json2,35 KB.url
