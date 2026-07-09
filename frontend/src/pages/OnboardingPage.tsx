@@ -22,7 +22,7 @@ function readSignupPrefill(): { name: string; surname: string } {
 export function OnboardingPage() {
   useReveal();
 
-  const { refresh } = useSession();
+  const { refresh, signOut } = useSession();
   const [sports, setSports] = useState<SportDto[]>([]);
   const [sportsError, setSportsError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -68,6 +68,11 @@ export function OnboardingPage() {
     <div className="ob-page">
       <header className="ob-page__bar">
         <Wordmark href="#/" />
+        {/* The only way out: every other route redirects back here until the
+            profile is finished. */}
+        <button type="button" className="ob-page__signout" onClick={signOut}>
+          Log out
+        </button>
       </header>
 
       <aside className="ob-page__aside">
