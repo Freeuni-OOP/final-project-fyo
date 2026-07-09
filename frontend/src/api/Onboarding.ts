@@ -1,8 +1,20 @@
 const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8081";
 
-// TODO: replace with authenticated user ID from Firebase once
-//       Sandro's auth filter is merged (Task 1).
-const TEMP_USER_ID = 1;
+const CURRENT_USER_ID_KEY = "fyo.currentUserId";
+
+function readCurrentUserId(): number {
+    try {
+        const raw = sessionStorage.getItem(CURRENT_USER_ID_KEY) ?? localStorage.getItem(CURRENT_USER_ID_KEY);
+        const id = raw ? Number(raw) : NaN;
+        if (Number.isInteger(id) && id > 0) {
+            return id;
+        }
+    } catch {
+        /* storage can be unavailable in private mode or during SSR */
+    }
+
+    throw new Error("No signed-in user id found. Sign in again and retry onboarding.");
+}
 
 export interface UserSportPayload {
     sportId: number;
@@ -38,8 +50,9 @@ export interface OnboardingResponse {
 }
 
 export async function getOnboardingStatus(): Promise<OnboardingStatusResponse> {
+    const userId = readCurrentUserId();
     const res = await fetch(
-        `${BASE}/api/onboarding/status?userId=${TEMP_USER_ID}`
+        `${BASE}/api/onboarding/status?userId=${userId}`
     );
     if (!res.ok) throw new Error("Failed to fetch onboarding status");
     return res.json();
@@ -48,7 +61,8 @@ export async function getOnboardingStatus(): Promise<OnboardingStatusResponse> {
 export async function submitOnboarding(
     data: OnboardingPayload
 ): Promise<OnboardingResponse> {
-    const res = await fetch(`${BASE}/api/onboarding?userId=${TEMP_USER_ID}`, {
+    const userId = readCurrentUserId();
+    const res = await fetch(`${BASE}/api/onboarding?userId=${userId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
