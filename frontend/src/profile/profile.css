@@ -1,0 +1,265 @@
+.pf-page {
+  min-height: 100vh;
+}
+
+.pf-shell {
+  width: min(920px, calc(100% - 2.5rem));
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+}
+
+.pf-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.pf-toolbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.pf-status,
+.pf-error {
+  margin: 0 0 1rem;
+}
+
+.pf-error {
+  color: #b42318;
+}
+
+.pf-view {
+  display: grid;
+  gap: 1.75rem;
+}
+
+.pf-hero {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  padding: 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--ink, #111) 12%, transparent);
+  background: color-mix(in srgb, var(--chalk, #f7f4ef) 88%, white);
+}
+
+.pf-hero__name {
+  margin: 0.15rem 0 0.2rem;
+  font-family: var(--font-display, "Big Shoulders Display", sans-serif);
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.pf-hero__handle {
+  margin: 0;
+  opacity: 0.7;
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+}
+
+.pf-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1rem;
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.pf-hero__rating {
+  margin: 0.85rem 0 0;
+  font-weight: 700;
+}
+
+.pf-section__title {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-display, "Big Shoulders Display", sans-serif);
+  font-size: 1.6rem;
+  text-transform: uppercase;
+}
+
+.pf-empty {
+  margin: 0;
+  opacity: 0.65;
+}
+
+.pf-sports {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.pf-sport {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--ink, #111) 12%, transparent);
+}
+
+.pf-sport__level {
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.pf-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.pf-card {
+  padding: 0.9rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--ink, #111) 12%, transparent);
+  background: color-mix(in srgb, var(--chalk, #f7f4ef) 92%, white);
+}
+
+.pf-card__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.pf-card__line {
+  margin: 0.45rem 0 0;
+}
+
+.pf-card__muted {
+  margin: 0.25rem 0 0;
+  opacity: 0.65;
+  font-size: 0.9rem;
+}
+
+.pf-card__score {
+  margin: 0.45rem 0 0;
+  font-weight: 600;
+}
+
+.pf-pill {
+  font-family: var(--font-mono, "JetBrains Mono", monospace);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--ink, #111) 18%, transparent);
+}
+
+.pf-edit {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.pf-edit__email {
+  margin: 0;
+  opacity: 0.75;
+}
+
+.pf-edit__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.pf-field {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.pf-field--full {
+  grid-column: 1 / -1;
+}
+
+.pf-field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.pf-field input,
+.pf-field select {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid color-mix(in srgb, var(--ink, #111) 18%, transparent);
+  background: #fff;
+  font: inherit;
+}
+
+.pf-edit__subtitle {
+  margin: 0.25rem 0 0;
+  font-family: var(--font-display, "Big Shoulders Display", sans-serif);
+  font-size: 1.35rem;
+  text-transform: uppercase;
+}
+
+.pf-edit__sports {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.pf-edit__sport {
+  border: 1px solid color-mix(in srgb, var(--ink, #111) 12%, transparent);
+}
+
+.pf-edit__sport-row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 0.9rem;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.pf-edit__sport--on {
+  background: color-mix(in srgb, var(--optic, #c8ff3d) 22%, white);
+}
+
+.pf-edit__levels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0 0.9rem 0.8rem;
+}
+
+.pf-edit__level {
+  border: 1px solid color-mix(in srgb, var(--ink, #111) 18%, transparent);
+  background: #fff;
+  padding: 0.35rem 0.55rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pf-edit__level--on {
+  background: var(--ink, #111);
+  color: var(--chalk, #f7f4ef);
+}
+
+.pf-edit__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+@media (max-width: 720px) {
+  .pf-hero {
+    flex-direction: column;
+  }
+
+  .pf-edit__grid {
+    grid-template-columns: 1fr;
+  }
+}
