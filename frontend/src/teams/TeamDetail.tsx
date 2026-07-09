@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ApiError, teamsApi } from "./api";
-import type { TeamDetails } from "./types";
+import type { TeamDetails, JoinRequest } from "./types";
 import { Avatar, Ball, Button } from "./ui";
 
 interface TeamDetailProps {
@@ -8,6 +8,7 @@ interface TeamDetailProps {
   onClose: () => void;
   /** Bubble an updated roster up so the list view stays in sync after a join. */
   onJoined?: (team: TeamDetails) => void;
+  currentUserId?: number;
 }
 
 function formatDate(iso: string): string {
@@ -22,16 +23,20 @@ function formatDate(iso: string): string {
   }
 }
 
-export function TeamDetail({ teamId, onClose, onJoined }: TeamDetailProps) {
+export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDetailProps) {
   const [team, setTeam] = useState<TeamDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [joinOpen, setJoinOpen] = useState(false);
-  const [userId, setUserId] = useState("");
-  const [joining, setJoining] = useState(false);
-  const [joinError, setJoinError] = useState<string | null>(null);
-  const [joined, setJoined] = useState(false);
+  const [requestOpen, setRequestOpen] = useState(false);
+  // Signed-in callers already know who they are; only the public view has to ask.
+  const [userId, setUserId] = useState(currentUserId ? String(currentUserId) : "");
+  const [requesting, setRequesting] = useState(false);
+  const [requestError, setRequestError] = useState<string | null>(null);
+  const [requested, setRequested] = useState(false);
+
+  const [pendingRequests, setPendingRequests] = useState<JoinRequest[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -47,6 +52,16 @@ export function TeamDetail({ teamId, onClose, onJoined }: TeamDetailProps) {
     };
   }, [teamId]);
 
+  useEffect(() => {
+    if (!team || !currentUserId || team.captain.id !== currentUserId) return;
+    setLoadingRequests(true);
+    teamsApi
+      .getPendingRequests(teamId)
+      .then(setPendingRequests)
+      .catch(() => {})
+      .finally(() => setLoadingRequests(false));
+  }, [team, teamId, currentUserId]);
+
   // Close on Escape; lock body scroll while the drawer is open.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -59,31 +74,51 @@ export function TeamDetail({ teamId, onClose, onJoined }: TeamDetailProps) {
     };
   }, [onClose]);
 
-  async function submitJoin(e: React.FormEvent) {
+  async function submitRequest(e: React.FormEvent) {
     e.preventDefault();
     const id = Number(userId);
     if (!Number.isInteger(id) || id <= 0) {
-      setJoinError("Enter a valid numeric player id.");
+      setRequestError("Enter a valid numeric player id.");
       return;
     }
-    setJoining(true);
-    setJoinError(null);
+    setRequesting(true);
+    setRequestError(null);
     try {
-      const updated = await teamsApi.join(teamId, id);
-      setTeam(updated);
-      setJoined(true);
-      setJoinOpen(false);
+      await teamsApi.requestToJoin(teamId, id);
+      setRequested(true);
+      setRequestOpen(false);
       setUserId("");
+    } catch (err) {
+      setRequestError((err as ApiError).message);
+    } finally {
+      setRequesting(false);
+    }
+  }
+
+  async function handleAccept(requestId: number) {
+    try {
+      await teamsApi.acceptRequest(teamId, requestId);
+      setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
+      const updated = await teamsApi.get(teamId);
+      setTeam(updated);
       onJoined?.(updated);
     } catch (err) {
-      setJoinError((err as ApiError).message);
-    } finally {
-      setJoining(false);
+      alert((err as ApiError).message);
+    }
+  }
+
+  async function handleDecline(requestId: number) {
+    try {
+      await teamsApi.declineRequest(teamId, requestId);
+      setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
+    } catch (err) {
+      alert((err as ApiError).message);
     }
   }
 
   const filled = team ? team.maxPlayers - team.openSpots : 0;
   const pct = team ? Math.round((filled / team.maxPlayers) * 100) : 0;
+  const isCaptain = team && currentUserId && team.captain.id === currentUserId;
 
   return (
     <div className="drawer" role="dialog" aria-modal="true" aria-label="Team details">
@@ -189,17 +224,46 @@ export function TeamDetail({ teamId, onClose, onJoined }: TeamDetailProps) {
               </ul>
             </section>
 
+            {isCaptain && (
+              <section className="td__block">
+                <h3 className="td__block-title">
+                  Join Requests <span className="td__block-n">{pendingRequests.length}</span>
+                </h3>
+                {loadingRequests && <p className="drawer__state">Loading requests…</p>}
+                {!loadingRequests && pendingRequests.length === 0 && (
+                  <p className="td__closed-note">No pending requests.</p>
+                )}
+                {!loadingRequests && pendingRequests.length > 0 && (
+                  <ul className="roster">
+                    {pendingRequests.map((r) => (
+                      <li className="player" key={r.id}>
+                        <Avatar src={r.imageUrl} name={r.fullName} size={40} />
+                        <div className="player__id">
+                          <span className="player__name">{r.fullName}</span>
+                          <span className="player__handle">@{r.username}</span>
+                        </div>
+                        <div className="jr__actions">
+                          <button className="jr__btn jr__btn--accept" onClick={() => handleAccept(r.id)}>✓</button>
+                          <button className="jr__btn jr__btn--decline" onClick={() => handleDecline(r.id)}>✕</button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            )}
+
             <footer className="td__foot">
-              {joined ? (
-                <p className="td__joined">✓ You're on the roster. See you on the court.</p>
+              {requested ? (
+                <p className="td__joined">✓ Request sent! The captain will review it.</p>
               ) : !team.isRecruiting ? (
-                <p className="td__closed-note">
-                  This team isn't taking new players right now.
-                </p>
-              ) : joinOpen ? (
-                <form className="joinform" onSubmit={submitJoin}>
+                <p className="td__closed-note">This team isn't taking new players right now.</p>
+              ) : isCaptain ? (
+                <p className="td__closed-note">You are the captain of this team.</p>
+              ) : requestOpen ? (
+                <form className="joinform" onSubmit={submitRequest}>
                   <label className="joinform__label" htmlFor="join-user">
-                    Player id
+                    Your player id
                   </label>
                   <div className="joinform__row">
                     <input
@@ -211,14 +275,14 @@ export function TeamDetail({ teamId, onClose, onJoined }: TeamDetailProps) {
                       onChange={(e) => setUserId(e.target.value)}
                       autoFocus
                     />
-                    <Button variant="optic" type="submit" disabled={joining}>
-                      {joining ? "Joining…" : "Confirm"}
+                    <Button variant="optic" type="submit" disabled={requesting}>
+                      {requesting ? "Sending…" : "Send request"}
                     </Button>
                   </div>
-                  {joinError && <p className="joinform__error">{joinError}</p>}
+                  {requestError && <p className="joinform__error">{requestError}</p>}
                 </form>
               ) : (
-                <Button variant="solid" onClick={() => setJoinOpen(true)}>
+                <Button variant="solid" onClick={() => setRequestOpen(true)}>
                   Request to join →
                 </Button>
               )}

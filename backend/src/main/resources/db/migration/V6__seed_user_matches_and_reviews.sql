@@ -1,4 +1,4 @@
-﻿-- Seed 1v1 matches + reviews so profile match history / ratings have demo data.
+-- Seed 1v1 matches + reviews so profile match history / ratings have demo data.
 -- Existing V3 matches are team-based (home_user_id/away_user_id null).
 
 INSERT INTO matches (sport_id, format, home_user_id, away_user_id, location, proposed_datetime, status)

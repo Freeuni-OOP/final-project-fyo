@@ -44,3 +44,28 @@ export interface TeamDetails extends TeamSummary {
   createdAt: string;
   members: TeamMember[];
 }
+
+/** Mirrors `CreateTeamRequest`: name, sportId, maxPlayers and captainUserId are required. */
+export interface CreateTeamPayload {
+  name: string;
+  sportId: number;
+  region: string | null;
+  description: string | null;
+  logoUrl: string | null;
+  maxPlayers: number;
+  isRecruiting: boolean;
+  captainUserId: number;
+}
+
+export type JoinRequestStatus = "PENDING" | "ACCEPTED" | "DECLINED";
+
+export interface JoinRequest {
+  id: number;
+  teamId: number;
+  userId: number;
+  username: string;
+  fullName: string;
+  imageUrl: string | null;
+  status: JoinRequestStatus;
+  createdAt: string;
+}

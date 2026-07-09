@@ -1,0 +1,146 @@
+/* ── Page layout — two-column split ────────────────────────── */
+.ob-page {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+    "bar  bar"
+    "aside main";
+}
+
+/* ── Top bar ────────────────────────────────────────────────── */
+.ob-page__bar {
+    grid-area: bar;
+    display: flex;
+    align-items: center;
+    padding: 16px var(--gutter);
+    border-bottom: 1px solid var(--hair);
+    background: rgba(241, 239, 233, 0.86);
+    backdrop-filter: blur(8px);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+}
+
+.ob-page__signout {
+    margin-left: auto;
+    padding: 10px 18px;
+    border: 1px solid var(--ink);
+    border-radius: 2px;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: background 0.18s ease, color 0.18s ease;
+}
+.ob-page__signout:hover {
+    background: var(--ink);
+    color: var(--chalk);
+}
+
+/* ── Left — cobalt panel ────────────────────────────────────── */
+.ob-page__aside {
+    grid-area: aside;
+    background: var(--court);
+    display: flex;
+    align-items: center;
+    padding: clamp(48px, 7vw, 96px) var(--gutter);
+}
+
+.ob-page__aside-inner {
+    max-width: 420px;
+}
+
+.ob-page__aside-title {
+    margin: 16px 0 0;
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    color: var(--chalk);
+}
+
+.ob-page__aside-lead {
+    margin: 20px 0 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: rgba(241, 239, 233, 0.75);
+    max-width: 38ch;
+}
+
+.ob-page__checklist {
+    list-style: none;
+    margin: 32px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.ob-page__checklist li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(241, 239, 233, 0.85);
+}
+.ob-page__checklist li::before {
+    content: "";
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--optic);
+    border-radius: 2px;
+    flex-shrink: 0;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 10'%3E%3Cpolyline points='1,5 4.5,8.5 11,1' stroke='%23c8f04a' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 70% no-repeat;
+}
+
+/* ── Right — form panel ─────────────────────────────────────── */
+.ob-page__main {
+    grid-area: main;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: clamp(48px, 7vw, 96px) var(--gutter);
+    overflow-y: auto;
+}
+
+.ob-page__load-error {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--ink-70);
+    letter-spacing: 0.03em;
+    margin-top: 40px;
+}
+
+/* ── Responsive — stack on mobile ───────────────────────────── */
+@media (max-width: 800px) {
+    .ob-page {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+      "bar"
+      "aside"
+      "main";
+    }
+
+    .ob-page__aside {
+        padding: clamp(36px, 6vw, 56px) var(--gutter);
+    }
+
+    .ob-page__aside-inner {
+        max-width: 100%;
+    }
+
+    .ob-page__main {
+        padding: clamp(36px, 6vw, 56px) var(--gutter);
+        align-items: flex-start;
+    }
+}

@@ -5,6 +5,7 @@ backend/.env
 frontend/node_modules/
 frontend/dist/
 frontend/.env
+*.tsbuildinfo
 *firebase-adminsdk*.json
 # Maven build output
 target/
@@ -30,3 +31,6 @@ Thumbs.db
 *.env
 config.properties
 src/main/resources/db.properties
+
+.agents
+.findyouropponent-1e269-firebase-adminsdk-fbsvc-341c0c6a5c.json2,35 KB.url

@@ -6,7 +6,7 @@ export function Footer() {
     <footer className="foot">
       <div className="foot__brand">
         <Wordmark />
-        <p>Find your game. Tbilisi, Georgia.</p>
+        <p>Find your opponent. Tbilisi, Georgia.</p>
       </div>
 
       <div className="foot__cols">
@@ -18,8 +18,8 @@ export function Footer() {
         </div>
         <div className="foot__col">
           <span className="foot__h">Teams</span>
-          <a href="#teams">For captains</a>
-          <a href="#teams">Roster fill</a>
+          <a href="#/teams">For captains</a>
+          <a href="#/teams">Roster fill</a>
           <a href="#how">Match reports</a>
         </div>
         <div className="foot__col">

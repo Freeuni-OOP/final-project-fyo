@@ -1,4 +1,4 @@
-﻿-- Fix mock seed data: V3 used 'TEAM' but the application format values are
+-- Fix mock seed data: V3 used 'TEAM' but the application format values are
 -- ONE_VS_ONE / TEAM_VS_TEAM.
 UPDATE matches SET format = 'TEAM_VS_TEAM' WHERE format = 'TEAM';
 
