@@ -52,6 +52,7 @@ export default function Login() {
         <Wordmark onClick={goHome} />
         <nav className="bar__nav" aria-label="Primary">
           <a href="#/teams">Teams</a>
+          <a href="#/profile">Profile</a>
         </nav>
         <Button variant="ghost" className="bar__cta" onClick={goHome}>
           ← Home

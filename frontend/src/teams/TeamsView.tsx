@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "../hooks/useAuth";
 import { ApiError, teamsApi } from "./api";
 import type { TeamDetails, TeamSummary } from "./types";
 import { TeamDetail } from "./TeamDetail";
@@ -14,6 +15,7 @@ const goHome = () => {
 };
 
 export function TeamsView() {
+  const { user } = useAuth();
   const [teams, setTeams] = useState<TeamSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,6 +77,7 @@ export function TeamsView() {
         <nav className="bar__nav" aria-label="Primary">
           <a href="#teams">Teams</a>
           <a href="#how">How it works</a>
+          {user && <a href="#/profile">Profile</a>}
         </nav>
         <Button variant="ghost" className="bar__cta" onClick={goHome}>
           ← Home
