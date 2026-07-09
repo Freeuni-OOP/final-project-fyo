@@ -1,20 +1,6 @@
+import { requireCurrentUserId } from "../auth/session";
+
 const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8081";
-
-const CURRENT_USER_ID_KEY = "fyo.currentUserId";
-
-function readCurrentUserId(): number {
-    try {
-        const raw = sessionStorage.getItem(CURRENT_USER_ID_KEY) ?? localStorage.getItem(CURRENT_USER_ID_KEY);
-        const id = raw ? Number(raw) : NaN;
-        if (Number.isInteger(id) && id > 0) {
-            return id;
-        }
-    } catch {
-        /* storage can be unavailable in private mode or during SSR */
-    }
-
-    throw new Error("No signed-in user id found. Sign in again and retry onboarding.");
-}
 
 export interface UserSportPayload {
     sportId: number;
@@ -50,7 +36,7 @@ export interface OnboardingResponse {
 }
 
 export async function getOnboardingStatus(): Promise<OnboardingStatusResponse> {
-    const userId = readCurrentUserId();
+    const userId = requireCurrentUserId();
     const res = await fetch(
         `${BASE}/api/onboarding/status?userId=${userId}`
     );
@@ -61,7 +47,7 @@ export async function getOnboardingStatus(): Promise<OnboardingStatusResponse> {
 export async function submitOnboarding(
     data: OnboardingPayload
 ): Promise<OnboardingResponse> {
-    const userId = readCurrentUserId();
+    const userId = requireCurrentUserId();
     const res = await fetch(`${BASE}/api/onboarding?userId=${userId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
