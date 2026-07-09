@@ -1,54 +1,81 @@
-import { useEffect, useState } from "react";
 import { LandingPage } from "./pages/LandingPage";
 import { OnboardingPage } from "./pages/OnboardingPage";
 import { TeamsView } from "./teams/TeamsView";
+import { AppShell } from "./app/AppShell";
+import { Dashboard } from "./app/pages/Dashboard";
+import { TeamsPage } from "./app/pages/TeamsPage";
+import { Splash } from "./app/Splash";
+import { isRoot, matchesRoute, Redirect, useHashRoute } from "./routing";
+import { useSession } from "./session/SessionContext";
 import Login from "./Login";
 import Signup from "./Signup";
 
 /**
- * Hash routes (same style as teams):
- *   #/teams, #/onboarding, #/login, #/signup
- *   anything else → landing (in-page anchors like #sports still work)
+ * Hash routes:
+ *   public   #/  #/home  #/login  #/signup  #/teams
+ *   signed in  #/app  #/app/teams  #/onboarding
+ *
+ * Signed-in users are redirected off the public marketing pages and into the
+ * platform shell. In-page anchors on the landing page (`#sports`, `#how`) are
+ * not routes — they never start with `#/`, so they fall through to the landing.
  */
-function useHashRoute(): string {
-  const [hash, setHash] = useState(() =>
-    typeof window !== "undefined" ? window.location.hash : ""
-  );
-
-  useEffect(() => {
-    const onChange = () => setHash(window.location.hash);
-    window.addEventListener("hashchange", onChange);
-    return () => window.removeEventListener("hashchange", onChange);
-  }, []);
-
-  return hash;
-}
-
-/** Match route itself or sub-path/query, not a sibling like `#/login-admin`. */
-function matchesRoute(hash: string, route: string): boolean {
-  if (!hash.startsWith(route)) return false;
-  const next = hash.charAt(route.length);
-  return next === "" || next === "/" || next === "?";
-}
-
 export default function App() {
   const hash = useHashRoute();
+  const { status, user } = useSession();
 
-  if (matchesRoute(hash, "#/teams")) {
-    return <TeamsView />;
-  }
+  if (status === "loading") return <Splash />;
 
-  if (matchesRoute(hash, "#/onboarding")) {
-    return <OnboardingPage />;
+  const authed = status === "authed" && user !== null;
+
+  // A half-set-up account can't use anything else.
+  if (authed && user.onboarding && !matchesRoute(hash, "#/onboarding")) {
+    return <Redirect to="#/onboarding" />;
   }
 
   if (matchesRoute(hash, "#/login")) {
-    return <Login />;
+    return authed ? <Redirect to="#/app" /> : <Login />;
   }
 
   if (matchesRoute(hash, "#/signup")) {
-    return <Signup />;
+    return authed ? <Redirect to="#/app" /> : <Signup />;
   }
 
+  if (matchesRoute(hash, "#/onboarding")) {
+    return authed ? <OnboardingPage /> : <Redirect to="#/login" />;
+  }
+
+  if (matchesRoute(hash, "#/app")) {
+    return authed ? <AppRoutes hash={hash} /> : <Redirect to="#/login" />;
+  }
+
+  if (matchesRoute(hash, "#/teams")) {
+    return authed ? <Redirect to="#/app/teams" /> : <TeamsView />;
+  }
+
+  // The landing page, still reachable while signed in.
+  if (matchesRoute(hash, "#/home")) return <LandingPage />;
+
+  if (isRoot(hash) && authed) return <Redirect to="#/app" />;
+
   return <LandingPage />;
+}
+
+function AppRoutes({ hash }: { hash: string }) {
+  if (matchesRoute(hash, "#/app/teams")) {
+    return (
+      <AppShell>
+        <TeamsPage />
+      </AppShell>
+    );
+  }
+
+  if (hash === "#/app" || hash === "#/app/") {
+    return (
+      <AppShell>
+        <Dashboard />
+      </AppShell>
+    );
+  }
+
+  return <Redirect to="#/app" />;
 }

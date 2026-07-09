@@ -4,11 +4,8 @@ import { Wordmark } from "../components/common/Wordmark";
 import { OnboardingForm } from "../components/onboarding/OnboardingForm";
 import { getSports, type SportDto } from "../api/Sports";
 import { submitOnboarding, type OnboardingPayload } from "../api/Onboarding";
+import { useSession } from "../session/SessionContext";
 import "./OnboardingPage.css";
-
-const goHome = () => {
-  window.location.hash = "#/";
-};
 
 /** Names saved at signup so we don't ask twice (review feedback). */
 function readSignupPrefill(): { name: string; surname: string } {
@@ -25,6 +22,7 @@ function readSignupPrefill(): { name: string; surname: string } {
 export function OnboardingPage() {
   useReveal();
 
+  const { refresh } = useSession();
   const [sports, setSports] = useState<SportDto[]>([]);
   const [sportsError, setSportsError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -48,7 +46,10 @@ export function OnboardingPage() {
       } catch {
         /* ignore */
       }
-      goHome();
+      // Must land before the redirect: the session still holds `onboarding:
+      // true`, and App bounces anyone carrying that flag back to this page.
+      await refresh();
+      window.location.hash = "#/app";
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong.";
       if (msg.toLowerCase().includes("username")) {

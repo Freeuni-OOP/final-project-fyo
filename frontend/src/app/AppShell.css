@@ -1,0 +1,297 @@
+/* =================================================================
+   FYO platform shell — sidebar + content column.
+   Everything is nested under `.court` so the tokens from theme.css
+   resolve and every component style in teams.css (rows, meters,
+   chips, badges, drawer, avatar, buttons) applies inside the shell
+   without being restyled.
+   ================================================================= */
+
+.court.splash {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+}
+.court.splash .splash__text {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-45);
+}
+
+/* ---------- layout --------------------------------------------- */
+
+.court.shell {
+  --rail: 264px;
+  min-height: 100vh;
+  padding-left: var(--rail); /* room for the fixed rail */
+}
+
+.court .shell__body {
+  min-width: 0; /* without this, wide content stretches the column */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.court .shell__main {
+  flex: 1;
+  width: 100%;
+  padding: clamp(28px, 4vw, 56px) clamp(20px, 4vw, 56px) clamp(64px, 8vw, 104px);
+}
+
+/* ---------- sidebar -------------------------------------------- */
+
+/* Fixed, not sticky: `.court` carries `overflow-x: clip`, and a sticky child
+   of a clipped box never pins to the viewport — the rail would scroll away
+   and leave the page background under it. */
+.court .shell__nav {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 30;
+  width: var(--rail);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  padding: 26px 0 22px;
+  background: var(--ink);
+  color: var(--chalk);
+}
+
+.court .shell__brand {
+  padding: 0 22px;
+}
+.court .shell__brand a {
+  display: inline-flex;
+}
+
+.court .shell__navlist {
+  display: flex;
+  flex-direction: column;
+}
+
+.court .shell__navhead {
+  margin: 0 0 10px;
+  padding: 0 22px;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(241, 239, 233, 0.35);
+}
+
+.court .navitem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 22px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(241, 239, 233, 0.6);
+  transition: color 0.16s ease, background 0.16s ease;
+}
+.court .navitem::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--optic);
+  transform: scaleY(0);
+  transition: transform 0.22s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.court .navitem:hover {
+  color: var(--chalk);
+  background: rgba(241, 239, 233, 0.06);
+}
+.court .navitem--on {
+  color: var(--chalk);
+  background: rgba(241, 239, 233, 0.08);
+}
+.court .navitem--on::before {
+  transform: scaleY(1);
+}
+.court .navitem__ball {
+  width: 7px;
+  height: 7px;
+}
+
+.court .navitem--soon {
+  color: rgba(241, 239, 233, 0.28);
+  cursor: not-allowed;
+}
+.court .navitem--soon:hover {
+  background: transparent;
+  color: rgba(241, 239, 233, 0.28);
+}
+.court .navitem__soon {
+  margin-left: auto;
+  padding: 3px 6px;
+  border: 1px solid rgba(241, 239, 233, 0.16);
+  border-radius: 2px;
+  font-style: normal;
+  font-size: 0.56rem;
+  letter-spacing: 0.14em;
+  color: rgba(241, 239, 233, 0.4);
+}
+
+.court .shell__user {
+  margin-top: auto;
+  display: grid;
+  gap: 14px;
+  padding: 20px 22px 0;
+  border-top: 1px solid rgba(241, 239, 233, 0.14);
+}
+.court .shell__user-id {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.court .shell__user-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.court .shell__user-name,
+.court .shell__user-handle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.court .shell__user-name {
+  font-weight: 600;
+  font-size: 0.94rem;
+}
+.court .shell__user-handle {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: rgba(241, 239, 233, 0.5);
+}
+
+/* The ghost button is ink-on-chalk by default; invert it against the ink panel. */
+.court .shell__user .btn--ghost {
+  justify-content: center;
+  padding: 11px 16px;
+  border-color: rgba(241, 239, 233, 0.28);
+  color: var(--chalk);
+}
+.court .shell__user .btn--ghost:hover:not(:disabled) {
+  background: var(--chalk);
+  color: var(--ink);
+  border-color: var(--chalk);
+}
+
+.court .shell__nav :focus-visible {
+  outline-color: var(--optic);
+}
+
+/* ---------- page header ---------------------------------------- */
+
+.court .page__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 24px;
+  margin-bottom: clamp(28px, 4vw, 44px);
+  border-bottom: 1px solid var(--ink);
+}
+.court .page__title {
+  margin: 10px 0 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2rem, 4.4vw, 3.2rem);
+  line-height: 0.94;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+.court .page__actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* ---------- mobile: sidebar becomes an off-canvas drawer -------- */
+
+.court .shell__mobilebar {
+  display: none;
+}
+
+@media (min-width: 961px) {
+  .court .shell__scrim {
+    display: none;
+  }
+}
+
+@media (max-width: 960px) {
+  .court.shell {
+    padding-left: 0; /* the rail becomes an off-canvas drawer */
+  }
+
+  .court .shell__nav {
+    width: min(280px, 86vw);
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .court.shell--navopen .shell__nav {
+    transform: none;
+  }
+
+  .court .shell__scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 28;
+    background: rgba(20, 20, 15, 0.5);
+    backdrop-filter: blur(2px);
+    animation: court-fade 0.25s ease;
+  }
+
+  .court .shell__mobilebar {
+    position: sticky;
+    top: 0;
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px var(--gutter);
+    background: rgba(241, 239, 233, 0.86);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--hair);
+  }
+
+  .court .shell__burger {
+    display: grid;
+    align-content: center;
+    gap: 4px;
+    width: 40px;
+    height: 40px;
+    padding: 10px;
+    border: 1px solid var(--hair-strong);
+    border-radius: 2px;
+    background: transparent;
+    cursor: pointer;
+  }
+  .court .shell__burger span {
+    display: block;
+    height: 2px;
+    background: var(--ink);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .court .shell__nav,
+  .court .navitem::before {
+    transition: none;
+  }
+}
