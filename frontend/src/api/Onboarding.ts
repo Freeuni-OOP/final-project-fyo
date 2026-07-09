@@ -1,8 +1,6 @@
-const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8081";
+import { requireCurrentUserId } from "../auth/session";
 
-// TODO: replace with authenticated user ID from Firebase once
-//       Sandro's auth filter is merged (Task 1).
-const TEMP_USER_ID = 1;
+const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8081";
 
 export interface UserSportPayload {
     sportId: number;
@@ -38,8 +36,9 @@ export interface OnboardingResponse {
 }
 
 export async function getOnboardingStatus(): Promise<OnboardingStatusResponse> {
+    const userId = requireCurrentUserId();
     const res = await fetch(
-        `${BASE}/api/onboarding/status?userId=${TEMP_USER_ID}`
+        `${BASE}/api/onboarding/status?userId=${userId}`
     );
     if (!res.ok) throw new Error("Failed to fetch onboarding status");
     return res.json();
@@ -48,7 +47,8 @@ export async function getOnboardingStatus(): Promise<OnboardingStatusResponse> {
 export async function submitOnboarding(
     data: OnboardingPayload
 ): Promise<OnboardingResponse> {
-    const res = await fetch(`${BASE}/api/onboarding?userId=${TEMP_USER_ID}`, {
+    const userId = requireCurrentUserId();
+    const res = await fetch(`${BASE}/api/onboarding?userId=${userId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
