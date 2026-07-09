@@ -9,6 +9,24 @@ import "./teams.css";
 
 type Filter = "ALL" | "RECRUITING";
 
+const CURRENT_USER_ID_KEY = "fyo.currentUserId";
+
+function readCurrentUserId(): number | null {
+  try {
+    const raw =
+      sessionStorage.getItem(CURRENT_USER_ID_KEY) ??
+      localStorage.getItem(CURRENT_USER_ID_KEY);
+    const id = raw ? Number(raw) : NaN;
+    if (Number.isInteger(id) && id > 0) {
+      return id;
+    }
+  } catch {
+    /* ignore storage failures */
+  }
+
+  return null;
+}
+
 const goHome = () => {
   window.location.hash = "#/";
 };
@@ -21,6 +39,7 @@ export function TeamsView() {
   const [sport, setSport] = useState<string>("ALL");
   const [status, setStatus] = useState<Filter>("ALL");
   const [openId, setOpenId] = useState<number | null>(null);
+  const currentUserId = readCurrentUserId();
 
   function load() {
     setLoading(true);
@@ -54,10 +73,8 @@ export function TeamsView() {
     [teams]
   );
 
-  // Reveal animations re-bind whenever the visible set changes.
   useReveal([visible.length, loading]);
 
-  /** Keep the list row in sync after someone joins from the drawer. */
   function handleJoined(updated: TeamDetails) {
     setTeams((prev) =>
       prev.map((t) =>
@@ -77,13 +94,13 @@ export function TeamsView() {
           <a href="#how">How it works</a>
         </nav>
         <Button variant="ghost" className="bar__cta" onClick={goHome}>
-          ‚Üê Home
+          ? Home
         </Button>
       </header>
 
       <section className="teamhero" id="how">
         <p className="eyebrow" data-reveal>
-          Teams ¬∑ Tbilisi &amp; beyond
+          Teams ∑ Tbilisi &amp; beyond
         </p>
         <h1 className="section-title teamhero__title" data-reveal>
           Find a squad that needs you
@@ -96,15 +113,15 @@ export function TeamsView() {
         <dl className="teamhero__stats" data-reveal>
           <div className="stat">
             <dt>Active teams</dt>
-            <dd>{loading ? "‚Äî" : teams.length}</dd>
+            <dd>{loading ? "ó" : teams.length}</dd>
           </div>
           <div className="stat">
             <dt>Open spots</dt>
-            <dd>{loading ? "‚Äî" : openSpotsTotal}</dd>
+            <dd>{loading ? "ó" : openSpotsTotal}</dd>
           </div>
           <div className="stat">
             <dt>Sports</dt>
-            <dd>{loading ? "‚Äî" : sports.length}</dd>
+            <dd>{loading ? "ó" : sports.length}</dd>
           </div>
         </dl>
       </section>
@@ -140,7 +157,7 @@ export function TeamsView() {
           </button>
         </div>
 
-        {loading && <p className="teams__state">Loading teams‚Ä¶</p>}
+        {loading && <p className="teams__state">Loading teamsÖ</p>}
 
         {error && !loading && (
           <div className="teams__state teams__state--error">
@@ -175,13 +192,11 @@ export function TeamsView() {
                   style={{ transitionDelay: `${Math.min(i, 8) * 40}ms` }}
                 >
                   <div className="row__team">
-                    <span className="row__no">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
+                    <span className="row__no">{String(i + 1).padStart(2, "0")}</span>
                     <div className="row__team-id">
                       <span className="row__sport">{t.sport.name}</span>
                       <span className="row__name">{t.name}</span>
-                      <span className="row__region">{t.region ?? "‚Äî"}</span>
+                      <span className="row__region">{t.region ?? "ó"}</span>
                     </div>
                   </div>
 
@@ -192,10 +207,7 @@ export function TeamsView() {
 
                   <div className="row__spots">
                     <span className="meter__track">
-                      <span
-                        className="meter__fill"
-                        style={{ width: `${pct}%` }}
-                      />
+                      <span className="meter__fill" style={{ width: `${pct}%` }} />
                     </span>
                     <span className="row__spots-n">
                       {t.isRecruiting ? (
@@ -209,7 +221,7 @@ export function TeamsView() {
                   </div>
 
                   <span className="row__go" aria-hidden="true">
-                    View ‚Üí
+                    View ?
                   </span>
                 </li>
               );
@@ -223,7 +235,7 @@ export function TeamsView() {
           <Wordmark onClick={goHome} />
           <p>Find your game. Tbilisi, Georgia.</p>
         </div>
-        <p className="foot__fine">¬© 2026 FYO ¬∑ A student project ¬∑ Tbilisi, Georgia</p>
+        <p className="foot__fine">© 2026 FYO ∑ A student project ∑ Tbilisi, Georgia</p>
       </footer>
 
       {openId !== null && (
@@ -231,7 +243,7 @@ export function TeamsView() {
           teamId={openId}
           onClose={() => setOpenId(null)}
           onJoined={handleJoined}
-          currentUserId={1}
+          currentUserId={currentUserId ?? undefined}
         />
       )}
     </div>
