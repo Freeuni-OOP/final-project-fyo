@@ -2,24 +2,15 @@ import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebase";
 import { authRequest, AuthApiError, type AuthUser } from "./authApi";
+import { storeCurrentUserId } from "./auth/session";
 import { Button, Wordmark } from "./teams/ui";
 import "./teams/theme.css";
 import "./teams/teams.css";
 import "./auth.css";
 
-const CURRENT_USER_ID_KEY = "fyo.currentUserId";
-
 const goHome = () => {
   window.location.hash = "#/";
 };
-
-function storeCurrentUserId(userId: number) {
-  try {
-    sessionStorage.setItem(CURRENT_USER_ID_KEY, String(userId));
-  } catch {
-    /* ignore storage failures */
-  }
-}
 
 export default function Login() {
   const [email, setEmail] = useState("");
