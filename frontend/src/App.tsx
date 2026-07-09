@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { LandingPage } from "./pages/LandingPage";
 import { OnboardingPage } from "./pages/OnboardingPage";
+import { ProfilePage } from "./profile/ProfilePage";
+import { PublicProfilePage } from "./profile/PublicProfilePage";
 import { TeamsView } from "./teams/TeamsView";
 import Login from "./Login";
 import Signup from "./Signup";
 
 /**
  * Hash routes (same style as teams):
- *   #/teams, #/onboarding, #/login, #/signup
+ *   #/teams, #/onboarding, #/login, #/signup, #/profile, #/profile/:id
  *   anything else → landing (in-page anchors like #sports still work)
  */
 function useHashRoute(): string {
@@ -31,6 +33,10 @@ function matchesRoute(hash: string, route: string): boolean {
   return next === "" || next === "/" || next === "?";
 }
 
+function isPublicProfileRoute(hash: string): boolean {
+  return /^#\/profile\/\d+(?:[/?]|$)/.test(hash);
+}
+
 export default function App() {
   const hash = useHashRoute();
 
@@ -48,6 +54,15 @@ export default function App() {
 
   if (matchesRoute(hash, "#/signup")) {
     return <Signup />;
+  }
+
+  // Public profile must be checked before the bare #/profile route.
+  if (isPublicProfileRoute(hash)) {
+    return <PublicProfilePage />;
+  }
+
+  if (matchesRoute(hash, "#/profile")) {
+    return <ProfilePage />;
   }
 
   return <LandingPage />;
