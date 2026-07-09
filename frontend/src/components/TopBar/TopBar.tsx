@@ -18,7 +18,6 @@ export function TopBar() {
         <a href="#sports">Sports</a>
         <a href="#how">How it works</a>
         <a href="#/teams">Teams</a>
-        <a href="#/onboarding">Setup</a>
         {!loading && user ? (
           <>
             <a href="#/profile">Profile</a>
