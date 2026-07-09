@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ApiError, matchesApi } from "./api";
 import type { Match } from "./types";
 import { Avatar, Ball, Button } from "../teams/ui";
@@ -39,6 +39,9 @@ export function MatchDetail({ matchId, onClose, onUpdated }: MatchDetailProps) {
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
 
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
+
   useEffect(() => {
     let alive = true;
     setLoading(true);
@@ -54,13 +57,39 @@ export function MatchDetail({ matchId, onClose, onUpdated }: MatchDetailProps) {
   }, [matchId]);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    closeRef.current?.focus();
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (e.key !== "Tab" || !panelRef.current) return;
+
+      const focusable = panelRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", onKey);
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
+      document.body.style.overflow = prevOverflow;
+      previouslyFocused?.focus();
     };
   }, [onClose]);
 
@@ -89,8 +118,13 @@ export function MatchDetail({ matchId, onClose, onUpdated }: MatchDetailProps) {
   return (
     <div className="drawer" role="dialog" aria-modal="true" aria-label="Match details">
       <div className="drawer__scrim" onClick={onClose} />
-      <aside className="drawer__panel">
-        <button className="drawer__close" onClick={onClose} aria-label="Close">
+      <aside className="drawer__panel" ref={panelRef}>
+        <button
+          ref={closeRef}
+          className="drawer__close"
+          onClick={onClose}
+          aria-label="Close"
+        >
           ✕
         </button>
 
