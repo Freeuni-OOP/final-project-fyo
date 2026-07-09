@@ -1,35 +1,38 @@
-import { Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getOnboardingStatus } from "./api/onboarding";
 import { LandingPage } from "./pages/LandingPage";
 import { OnboardingPage } from "./pages/OnboardingPage";
 import { TeamsView } from "./teams/TeamsView";
 
-type GuardState = "loading" | "needs-onboarding" | "done";
+/**
+ * Same style as the rest of the app: hash routes.
+ *   #/teams       → teams list
+ *   #/onboarding  → profile setup form
+ *   anything else → landing (in-page anchors like #sports still work)
+ */
+function useHashRoute(): string {
+  const [hash, setHash] = useState(() =>
+    typeof window !== "undefined" ? window.location.hash : ""
+  );
 
-function OnboardingGuard() {
-    const [state, setState] = useState<GuardState>("loading");
-    useEffect(() => {
-        getOnboardingStatus()
-            .then((res) => {
-                setState(res.onboardingCompleted ? "done" : "needs-onboarding");
-            })
-            .catch(() => {
-                setState("needs-onboarding");
-            });
-    }, []);
-    if (state === "loading") return null;
-    if (state === "needs-onboarding") return <Navigate to="/onboarding" replace />;
-    return <Navigate to="/" replace />;
+  useEffect(() => {
+    const onChange = () => setHash(window.location.hash);
+    window.addEventListener("hashchange", onChange);
+    return () => window.removeEventListener("hashchange", onChange);
+  }, []);
+
+  return hash;
 }
 
 export default function App() {
-    return (
-        <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/onboarding" element={<OnboardingPage />} />
-            <Route path="/check" element={<OnboardingGuard />} />
-            <Route path="/teams" element={<TeamsView />} />
-        </Routes>
-    );
+  const hash = useHashRoute();
+
+  if (hash.startsWith("#/teams")) {
+    return <TeamsView />;
+  }
+
+  if (hash.startsWith("#/onboarding")) {
+    return <OnboardingPage />;
+  }
+
+  return <LandingPage />;
 }
