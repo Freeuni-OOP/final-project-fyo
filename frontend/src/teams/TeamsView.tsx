@@ -94,13 +94,13 @@ export function TeamsView() {
           <a href="#how">How it works</a>
         </nav>
         <Button variant="ghost" className="bar__cta" onClick={goHome}>
-          ? Home
+          {"\u2190"} Home
         </Button>
       </header>
 
       <section className="teamhero" id="how">
         <p className="eyebrow" data-reveal>
-          Teams · Tbilisi &amp; beyond
+          Teams {"\u00b7"} Tbilisi &amp; beyond
         </p>
         <h1 className="section-title teamhero__title" data-reveal>
           Find a squad that needs you
@@ -113,15 +113,15 @@ export function TeamsView() {
         <dl className="teamhero__stats" data-reveal>
           <div className="stat">
             <dt>Active teams</dt>
-            <dd>{loading ? "—" : teams.length}</dd>
+            <dd>{loading ? "\u2014" : teams.length}</dd>
           </div>
           <div className="stat">
             <dt>Open spots</dt>
-            <dd>{loading ? "—" : openSpotsTotal}</dd>
+            <dd>{loading ? "\u2014" : openSpotsTotal}</dd>
           </div>
           <div className="stat">
             <dt>Sports</dt>
-            <dd>{loading ? "—" : sports.length}</dd>
+            <dd>{loading ? "\u2014" : sports.length}</dd>
           </div>
         </dl>
       </section>
@@ -157,7 +157,7 @@ export function TeamsView() {
           </button>
         </div>
 
-        {loading && <p className="teams__state">Loading teams…</p>}
+        {loading && <p className="teams__state">Loading teams{"\u2026"}</p>}
 
         {error && !loading && (
           <div className="teams__state teams__state--error">
@@ -196,7 +196,7 @@ export function TeamsView() {
                     <div className="row__team-id">
                       <span className="row__sport">{t.sport.name}</span>
                       <span className="row__name">{t.name}</span>
-                      <span className="row__region">{t.region ?? "—"}</span>
+                      <span className="row__region">{t.region ?? "\u2014"}</span>
                     </div>
                   </div>
 
@@ -221,7 +221,7 @@ export function TeamsView() {
                   </div>
 
                   <span className="row__go" aria-hidden="true">
-                    View ?
+                    View {"\u2192"}
                   </span>
                 </li>
               );
@@ -235,7 +235,9 @@ export function TeamsView() {
           <Wordmark onClick={goHome} />
           <p>Find your game. Tbilisi, Georgia.</p>
         </div>
-        <p className="foot__fine">© 2026 FYO · A student project · Tbilisi, Georgia</p>
+        <p className="foot__fine">
+          {"\u00a9"} 2026 FYO {"\u00b7"} A student project {"\u00b7"} Tbilisi, Georgia
+        </p>
       </footer>
 
       {openId !== null && (
