@@ -62,6 +62,7 @@ public class MatchResult {
 
     public MatchResult(Match match, short homeScore, short awayScore, User submittedByUser) {
         this.match = match;
+        match.linkResult(this);
         this.submittedByUser = submittedByUser;
         applyScore(homeScore, awayScore);
         this.confirmationStatus = MatchResultConfirmationStatus.PENDING;

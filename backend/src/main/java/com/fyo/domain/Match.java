@@ -1,5 +1,6 @@
 package com.fyo.domain;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -10,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 
@@ -62,6 +64,9 @@ public class Match {
 
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private OffsetDateTime createdAt;
+
+    @OneToOne(mappedBy = "match", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private MatchResult result;
 
     protected Match() {
     }
@@ -137,6 +142,14 @@ public class Match {
 
     public OffsetDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public MatchResult getResult() {
+        return result;
+    }
+
+    void linkResult(MatchResult result) {
+        this.result = result;
     }
 
     public boolean hasParticipant(Long userId, Long teamId) {
