@@ -1,8 +1,16 @@
 import { Wordmark } from "../common/Wordmark";
 import { Button } from "../common/Button";
+import { useAuth } from "../../hooks/useAuth";
 import "./TopBar.css";
 
 export function TopBar() {
+  const { user, loading, signOut } = useAuth();
+
+  async function handleSignOut() {
+    await signOut();
+    window.location.hash = "#/";
+  }
+
   return (
     <header className="bar">
       <Wordmark href="#top" />
@@ -11,8 +19,19 @@ export function TopBar() {
         <a href="#how">How it works</a>
         <a href="#/teams">Teams</a>
         <a href="#/onboarding">Setup</a>
-        <a href="#/login">Log in</a>
-        <a href="#/signup">Sign up</a>
+        {!loading && user ? (
+          <>
+            <a href="#/profile">Profile</a>
+            <button type="button" className="bar__text-btn" onClick={handleSignOut}>
+              Log out
+            </button>
+          </>
+        ) : (
+          <>
+            <a href="#/login">Log in</a>
+            <a href="#/signup">Sign up</a>
+          </>
+        )}
       </nav>
       <Button href="#join" className="bar__cta">
         Find a game
