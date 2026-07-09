@@ -68,6 +68,9 @@ public class Match {
     @OneToOne(mappedBy = "match", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private MatchResult result;
 
+    @OneToOne(mappedBy = "match", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private MatchListing listing;
+
     protected Match() {
     }
 
@@ -148,8 +151,16 @@ public class Match {
         return result;
     }
 
+    public MatchListing getListing() {
+        return listing;
+    }
+
     void linkResult(MatchResult result) {
         this.result = result;
+    }
+
+    void linkListing(MatchListing listing) {
+        this.listing = listing;
     }
 
     public boolean hasParticipant(Long userId, Long teamId) {

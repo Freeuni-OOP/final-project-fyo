@@ -1,5 +1,6 @@
 package com.fyo.domain;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -10,8 +11,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A user or team posting that they need an opponent. Others can respond via
@@ -52,9 +57,12 @@ public class MatchListing {
     @Column(nullable = false)
     private MatchListingStatus status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "match_id")
     private Match match;
+
+    @OneToMany(mappedBy = "listing", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MatchListingResponse> responses = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private OffsetDateTime createdAt;
@@ -123,6 +131,10 @@ public class MatchListing {
         return createdAt;
     }
 
+    void addResponse(MatchListingResponse response) {
+        responses.add(response);
+    }
+
     public boolean isPostedBy(Long userId, Long teamId) {
         if (format == MatchFormat.ONE_VS_ONE) {
             return userId != null && postedByUser != null && userId.equals(postedByUser.getId());
@@ -136,6 +148,7 @@ public class MatchListing {
         }
         this.status = MatchListingStatus.FILLED;
         this.match = match;
+        match.linkListing(this);
     }
 
     public void cancel() {

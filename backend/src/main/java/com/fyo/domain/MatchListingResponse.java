@@ -57,6 +57,7 @@ public class MatchListingResponse {
         this.responderUser = responderUser;
         this.responderTeam = responderTeam;
         this.status = MatchListingResponseStatus.PENDING;
+        listing.addResponse(this);
     }
 
     public static MatchListingResponse fromUser(MatchListing listing, User responderUser) {
