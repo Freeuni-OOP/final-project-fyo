@@ -29,7 +29,8 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
   const [error, setError] = useState<string | null>(null);
 
   const [requestOpen, setRequestOpen] = useState(false);
-  const [userId, setUserId] = useState("");
+  // Signed-in callers already know who they are; only the public view has to ask.
+  const [userId, setUserId] = useState(currentUserId ? String(currentUserId) : "");
   const [requesting, setRequesting] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
   const [requested, setRequested] = useState(false);

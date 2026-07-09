@@ -1,89 +1,28 @@
-import { useEffect, useMemo, useState } from "react";
-import { ApiError, teamsApi } from "./api";
-import type { TeamDetails, TeamSummary } from "./types";
-import { TeamDetail } from "./TeamDetail";
-import { useReveal } from "./useReveal";
+import { useMemo } from "react";
+import { TeamsBoard } from "./TeamsBoard";
+import { useTeams } from "./useTeams";
 import { Button, Wordmark } from "./ui";
 import "./theme.css";
 import "./teams.css";
-
-type Filter = "ALL" | "RECRUITING";
-
-const CURRENT_USER_ID_KEY = "fyo.currentUserId";
-
-function readCurrentUserId(): number | null {
-  try {
-    const raw =
-      sessionStorage.getItem(CURRENT_USER_ID_KEY) ??
-      localStorage.getItem(CURRENT_USER_ID_KEY);
-    const id = raw ? Number(raw) : NaN;
-    if (Number.isInteger(id) && id > 0) {
-      return id;
-    }
-  } catch {
-    /* ignore storage failures */
-  }
-
-  return null;
-}
 
 const goHome = () => {
   window.location.hash = "#/";
 };
 
+/** Public, signed-out view of the team list. Signed-in users are routed to
+ *  `#/app/teams`, which renders the same board inside the platform shell. */
 export function TeamsView() {
-  const [teams, setTeams] = useState<TeamSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { teams, loading, error, reload, applyRosterChange } = useTeams();
 
-  const [sport, setSport] = useState<string>("ALL");
-  const [status, setStatus] = useState<Filter>("ALL");
-  const [openId, setOpenId] = useState<number | null>(null);
-  const currentUserId = readCurrentUserId();
-
-  function load() {
-    setLoading(true);
-    setError(null);
-    teamsApi
-      .list()
-      .then(setTeams)
-      .catch((e: ApiError) => setError(e.message))
-      .finally(() => setLoading(false));
-  }
-
-  useEffect(load, []);
-
-  const sports = useMemo(
-    () => Array.from(new Set(teams.map((t) => t.sport.name))).sort(),
+  const sportCount = useMemo(
+    () => new Set(teams.map((t) => t.sport.name)).size,
     [teams]
-  );
-
-  const visible = useMemo(
-    () =>
-      teams.filter(
-        (t) =>
-          (sport === "ALL" || t.sport.name === sport) &&
-          (status === "ALL" || t.isRecruiting)
-      ),
-    [teams, sport, status]
   );
 
   const openSpotsTotal = useMemo(
     () => teams.reduce((sum, t) => sum + (t.isRecruiting ? t.openSpots : 0), 0),
     [teams]
   );
-
-  useReveal([visible.length, loading]);
-
-  function handleJoined(updated: TeamDetails) {
-    setTeams((prev) =>
-      prev.map((t) =>
-        t.id === updated.id
-          ? { ...t, openSpots: updated.openSpots, isRecruiting: updated.isRecruiting }
-          : t
-      )
-    );
-  }
 
   return (
     <div className="court">
@@ -94,13 +33,13 @@ export function TeamsView() {
           <a href="#how">How it works</a>
         </nav>
         <Button variant="ghost" className="bar__cta" onClick={goHome}>
-          ? Home
+          Home
         </Button>
       </header>
 
       <section className="teamhero" id="how">
         <p className="eyebrow" data-reveal>
-          Teams · Tbilisi &amp; beyond
+          Teams Â· Tbilisi &amp; beyond
         </p>
         <h1 className="section-title teamhero__title" data-reveal>
           Find a squad that needs you
@@ -113,139 +52,36 @@ export function TeamsView() {
         <dl className="teamhero__stats" data-reveal>
           <div className="stat">
             <dt>Active teams</dt>
-            <dd>{loading ? "—" : teams.length}</dd>
+            <dd>{loading ? "â€”" : teams.length}</dd>
           </div>
           <div className="stat">
             <dt>Open spots</dt>
-            <dd>{loading ? "—" : openSpotsTotal}</dd>
+            <dd>{loading ? "â€”" : openSpotsTotal}</dd>
           </div>
           <div className="stat">
             <dt>Sports</dt>
-            <dd>{loading ? "—" : sports.length}</dd>
+            <dd>{loading ? "â€”" : sportCount}</dd>
           </div>
         </dl>
       </section>
 
       <section className="teams" id="teams">
-        <div className="teams__controls" data-reveal>
-          <div className="chips" role="group" aria-label="Filter by sport">
-            <button
-              className={`chip ${sport === "ALL" ? "chip--on" : ""}`}
-              onClick={() => setSport("ALL")}
-            >
-              All sports
-            </button>
-            {sports.map((s) => (
-              <button
-                key={s}
-                className={`chip ${sport === s ? "chip--on" : ""}`}
-                onClick={() => setSport(s)}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-          <button
-            className={`toggle ${status === "RECRUITING" ? "toggle--on" : ""}`}
-            onClick={() =>
-              setStatus((s) => (s === "RECRUITING" ? "ALL" : "RECRUITING"))
-            }
-            aria-pressed={status === "RECRUITING"}
-          >
-            <span className="toggle__dot" />
-            Recruiting only
-          </button>
-        </div>
-
-        {loading && <p className="teams__state">Loading teams…</p>}
-
-        {error && !loading && (
-          <div className="teams__state teams__state--error">
-            <p>{error}</p>
-            <Button variant="ghost" onClick={load}>
-              Try again
-            </Button>
-          </div>
-        )}
-
-        {!loading && !error && visible.length === 0 && (
-          <p className="teams__state">No teams match that filter yet.</p>
-        )}
-
-        {!loading && !error && visible.length > 0 && (
-          <ul className="grid">
-            <li className="grid__head">
-              <span>Team</span>
-              <span className="grid__head-mid">Captain</span>
-              <span className="grid__head-spots">Open spots</span>
-              <span />
-            </li>
-            {visible.map((t, i) => {
-              const filled = t.maxPlayers - t.openSpots;
-              const pct = Math.round((filled / t.maxPlayers) * 100);
-              return (
-                <li
-                  className="row"
-                  key={t.id}
-                  data-reveal
-                  onClick={() => setOpenId(t.id)}
-                  style={{ transitionDelay: `${Math.min(i, 8) * 40}ms` }}
-                >
-                  <div className="row__team">
-                    <span className="row__no">{String(i + 1).padStart(2, "0")}</span>
-                    <div className="row__team-id">
-                      <span className="row__sport">{t.sport.name}</span>
-                      <span className="row__name">{t.name}</span>
-                      <span className="row__region">{t.region ?? "—"}</span>
-                    </div>
-                  </div>
-
-                  <div className="row__captain">
-                    <span className="row__captain-label">Captain</span>
-                    {t.captain.name} {t.captain.surname}
-                  </div>
-
-                  <div className="row__spots">
-                    <span className="meter__track">
-                      <span className="meter__fill" style={{ width: `${pct}%` }} />
-                    </span>
-                    <span className="row__spots-n">
-                      {t.isRecruiting ? (
-                        <>
-                          <strong>{t.openSpots}</strong> open
-                        </>
-                      ) : (
-                        "Full"
-                      )}
-                    </span>
-                  </div>
-
-                  <span className="row__go" aria-hidden="true">
-                    View ?
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+        <TeamsBoard
+          teams={teams}
+          loading={loading}
+          error={error}
+          onRetry={reload}
+          onRosterChange={applyRosterChange}
+        />
       </section>
 
       <footer className="foot">
         <div className="foot__brand">
           <Wordmark onClick={goHome} />
-          <p>Find your game. Tbilisi, Georgia.</p>
+          <p>Find your oponent. Tbilisi, Georgia.</p>
         </div>
-        <p className="foot__fine">© 2026 FYO · A student project · Tbilisi, Georgia</p>
+        <p className="foot__fine">Â© 2026 FYO Â· A student project Â· Tbilisi, Georgia</p>
       </footer>
-
-      {openId !== null && (
-        <TeamDetail
-          teamId={openId}
-          onClose={() => setOpenId(null)}
-          onJoined={handleJoined}
-          currentUserId={currentUserId ?? undefined}
-        />
-      )}
     </div>
   );
 }
