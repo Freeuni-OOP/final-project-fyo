@@ -1,10 +1,13 @@
 import { useState, useEffect, type CSSProperties } from "react";
-import { type OnboardingPayload, type UserSportPayload } from "../../api/onboarding";
-import { type SportDto } from "../../api/sports";
+import { type OnboardingPayload, type UserSportPayload } from "../../api/Onboarding";
+import { type SportDto } from "../../api/Sports";
 import "./OnboardingForm.css";
 
 interface Props {
     sports: SportDto[];
+    /** Prefill from signup so we don't re-ask first/last name. */
+    initialName?: string;
+    initialSurname?: string;
     onSubmit: (data: OnboardingPayload) => void;
     submitting: boolean;
     error: string | null;
@@ -40,9 +43,20 @@ const EMPTY_STEP1: Step1Fields = {
     imageUrl: "",
 };
 
-export function OnboardingForm({ sports, onSubmit, submitting, error }: Props) {
+export function OnboardingForm({
+    sports,
+    initialName = "",
+    initialSurname = "",
+    onSubmit,
+    submitting,
+    error,
+}: Props) {
     const [step, setStep] = useState<1 | 2>(1);
-    const [fields, setFields] = useState<Step1Fields>(EMPTY_STEP1);
+    const [fields, setFields] = useState<Step1Fields>({
+        ...EMPTY_STEP1,
+        name: initialName,
+        surname: initialSurname,
+    });
     const [selectedSports, setSelectedSports] = useState<Record<number, SkillLevel>>({});
     const [step1Error, setStep1Error] = useState<string | null>(null);
 
