@@ -3,6 +3,7 @@ import { OnboardingPage } from "./pages/OnboardingPage";
 import { ProfilePage } from "./profile/ProfilePage";
 import { PublicProfilePage } from "./profile/PublicProfilePage";
 import { TeamsView } from "./teams/TeamsView";
+import { ChatView } from "./chat/ChatView";
 import { AppShell } from "./app/AppShell";
 import { Dashboard } from "./app/pages/Dashboard";
 import { TeamsPage } from "./app/pages/TeamsPage";
@@ -16,7 +17,7 @@ import Signup from "./Signup";
 /**
  * Hash routes:
  *   public   #/  #/home  #/login  #/signup  #/teams
- *   signed in  #/app  #/app/teams  #/onboarding
+ *   signed in  #/app  #/app/teams  #/onboarding  #/chat
  *
  * Signed-in users are redirected off the public marketing pages and into the
  * platform shell. In-page anchors on the landing page (`#sports`, `#how`) are
@@ -37,6 +38,10 @@ export default function App() {
   // A half-set-up account can't use anything else.
   if (authed && user.onboarding && !matchesRoute(hash, "#/onboarding")) {
     return <Redirect to="#/onboarding" />;
+  }
+
+  if (matchesRoute(hash, "#/chat")) {
+    return authed ? <ChatView /> : <Redirect to="#/login" />;
   }
 
   if (matchesRoute(hash, "#/login")) {
