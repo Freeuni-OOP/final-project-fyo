@@ -4,12 +4,8 @@ import { Wordmark } from "../components/common/Wordmark";
 import { OnboardingForm } from "../components/onboarding/OnboardingForm";
 import { getSports, type SportDto } from "../api/Sports";
 import { submitOnboarding, type OnboardingPayload } from "../api/Onboarding";
-import { NotAuthenticatedError, readCurrentUserId } from "../auth/session";
+import { useSession } from "../session/SessionContext";
 import "./OnboardingPage.css";
-
-const goHome = () => {
-  window.location.hash = "#/";
-};
 
 /** Names saved at signup so we don't ask twice (review feedback). */
 function readSignupPrefill(): { name: string; surname: string } {
@@ -26,6 +22,7 @@ function readSignupPrefill(): { name: string; surname: string } {
 export function OnboardingPage() {
   useReveal();
 
+  const { refresh, signOut } = useSession();
   const [sports, setSports] = useState<SportDto[]>([]);
   const [sportsError, setSportsError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -50,7 +47,10 @@ export function OnboardingPage() {
       } catch {
         /* ignore */
       }
-      goHome();
+      // Must land before the redirect: the session still holds `onboarding:
+      // true`, and App bounces anyone carrying that flag back to this page.
+      await refresh();
+      window.location.hash = "#/app";
     } catch (err) {
       if (err instanceof NotAuthenticatedError) {
         setSubmitError("You need to sign in to complete onboarding.");
@@ -73,6 +73,11 @@ export function OnboardingPage() {
     <div className="ob-page">
       <header className="ob-page__bar">
         <Wordmark href="#/" />
+        {/* The only way out: every other route redirects back here until the
+            profile is finished. */}
+        <button type="button" className="ob-page__signout" onClick={signOut}>
+          Log out
+        </button>
       </header>
 
       <aside className="ob-page__aside">

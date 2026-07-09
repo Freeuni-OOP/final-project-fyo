@@ -1,13 +1,5 @@
-import { useState } from "react";
-import { FirebaseError } from "firebase/app";
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  type UserCredential,
-} from "firebase/auth";
-import { auth } from "./firebase";
-import { authRequest } from "./authApi";
-import { storeCurrentUserId } from "./auth/session";
+﻿import { useState } from "react";
+import { useSession } from "./session/SessionContext";
 import { Button, Wordmark } from "./teams/ui";
 import "./teams/theme.css";
 import "./teams/teams.css";
@@ -18,6 +10,7 @@ const goHome = () => {
 };
 
 export default function Signup() {
+  const { signUp } = useSession();
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
   const [email, setEmail] = useState("");
@@ -43,21 +36,7 @@ export default function Signup() {
     setLoading(true);
 
     try {
-      let credential: UserCredential;
-      try {
-        credential = await createUserWithEmailAndPassword(auth, email, password);
-      } catch (err) {
-        if (err instanceof FirebaseError && err.code === "auth/email-already-in-use") {
-          credential = await signInWithEmailAndPassword(auth, email, password);
-        } else {
-          throw err;
-        }
-      }
-
-      const idToken = await credential.user.getIdToken();
-      const authUser = await authRequest("/api/auth/signup", idToken, { name, surname });
-      storeCurrentUserId(authUser.id);
-
+      // Prefill the onboarding form with names we already collected here.
       try {
         sessionStorage.setItem("fyo.signupName", name.trim());
         sessionStorage.setItem("fyo.signupSurname", surname.trim());
@@ -65,10 +44,13 @@ export default function Signup() {
         /* private mode etc. */
       }
 
-      window.location.hash = "#/onboarding";
+      // Firebase owns the credentials. The backend gets only the signed ID
+      // token (identity) plus extra profile fields — never email/uid in the
+      // body, they are read from the verified token server-side. The new
+      // account has `onboarding: true`, so App routes it to `#/onboarding`.
+      await signUp({ email, password, name, surname });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong during signup");
-    } finally {
       setLoading(false);
     }
   }

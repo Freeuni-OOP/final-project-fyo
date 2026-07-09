@@ -6,7 +6,7 @@ export function Footer() {
     <footer className="foot">
       <div className="foot__brand">
         <Wordmark />
-        <p>Find your game. Tbilisi, Georgia.</p>
+        <p>Find your opponent. Tbilisi, Georgia.</p>
       </div>
 
       <div className="foot__cols">

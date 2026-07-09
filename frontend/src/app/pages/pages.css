@@ -1,0 +1,210 @@
+/* =================================================================
+   Styles for the pages that live inside the shell. Scoped under
+   `.court` like every other component sheet, so the tokens resolve
+   and the atoms from teams.css (rows, meters, badges, drawer) can
+   be reused as-is.
+   ================================================================= */
+
+/* ---------- stat row (dashboard) -------------------------------- */
+
+.court .statrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(24px, 5vw, 64px);
+  margin: 0;
+}
+
+/* ---------- panels ---------------------------------------------- */
+
+.court .panel {
+  margin-top: clamp(36px, 5vw, 60px);
+}
+
+.court .panel__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.court .panel__title {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-45);
+}
+
+.court .panel__link {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--court);
+  transition: color 0.16s ease;
+}
+.court .panel__link:hover {
+  color: var(--ink);
+}
+
+/* ---------- match rows ------------------------------------------ */
+
+.court .matchlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--ink);
+}
+
+.court .match {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px 28px;
+  padding: clamp(16px, 2vw, 22px) 4px;
+  border-bottom: 1px solid var(--hair);
+}
+
+.court .match__sport {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--court);
+}
+
+.court .match__teams {
+  margin: 6px 0 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.2rem, 2.4vw, 1.7rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+.court .match__vs {
+  margin: 0 0.45em;
+  color: var(--ink-45);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: lowercase;
+}
+
+.court .match__meta {
+  font-size: 0.9rem;
+  color: var(--ink-45);
+}
+
+/* `.badge` lives in teams.css; only the third state is new. */
+.court .badge--cancelled {
+  background: transparent;
+  border: 1px solid var(--hair-strong);
+  color: var(--ink-45);
+}
+
+/* The badge carries a top margin for its use inside the team drawer. */
+.court .match .badge {
+  margin-top: 0;
+  justify-self: end;
+}
+
+@media (max-width: 760px) {
+  .court .match {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .court .match__meta {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---------- forms (create-team drawer) --------------------------- */
+
+.court .form {
+  display: grid;
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.court .form__field {
+  display: grid;
+  gap: 6px;
+}
+
+.court .form__label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-45);
+}
+
+.court .form__input,
+.court .form__select,
+.court .form__textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--hair-strong);
+  border-radius: 2px;
+  background: #fff;
+  font: inherit;
+  color: var(--ink);
+}
+.court .form__input:focus,
+.court .form__select:focus,
+.court .form__textarea:focus {
+  border-color: var(--ink);
+  outline: none;
+}
+
+.court .form__textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.court .form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.court .form__check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  color: var(--ink-70);
+  cursor: pointer;
+}
+.court .form__check input {
+  accent-color: var(--court);
+  width: 16px;
+  height: 16px;
+}
+
+.court .form__error {
+  margin: 0;
+  color: #b3261e;
+  font-size: 0.9rem;
+}
+
+.court .form__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 20px;
+  border-top: 1px solid var(--hair);
+}
+.court .form__actions .btn {
+  flex: 1;
+  justify-content: center;
+}
+
+/* The drawer's create form is a page, not a card: give it room to breathe. */
+.court .drawer__panel .form {
+  padding-bottom: 8px;
+}
