@@ -54,9 +54,7 @@ public class MatchService {
         Match match = matchRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Match not found"));
 
-        if (!isParticipant(match, actingUserId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a participant in this match");
-        }
+        assertCanCancel(match, actingUserId);
         if (match.getStatus() != MatchStatus.UPCOMING) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only an upcoming match can be cancelled");
         }
@@ -65,11 +63,26 @@ public class MatchService {
         return toResponse(match);
     }
 
-    private boolean isParticipant(Match match, Long actingUserId) {
+    /**
+     * ONE_VS_ONE: either participant may cancel.
+     * TEAM_VS_TEAM: only a captain of the home or away team may cancel —
+     * ordinary team members are rejected explicitly (not treated as participants).
+     */
+    private void assertCanCancel(Match match, Long actingUserId) {
         if (match.getFormat() == MatchFormat.ONE_VS_ONE) {
-            return actingUserId.equals(idOf(match.getHomeUser())) || actingUserId.equals(idOf(match.getAwayUser()));
+            if (actingUserId.equals(idOf(match.getHomeUser())) || actingUserId.equals(idOf(match.getAwayUser()))) {
+                return;
+            }
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not a participant in this match");
         }
-        return actingUserId.equals(captainIdOf(match.getHomeTeam())) || actingUserId.equals(captainIdOf(match.getAwayTeam()));
+
+        if (actingUserId.equals(captainIdOf(match.getHomeTeam())) || actingUserId.equals(captainIdOf(match.getAwayTeam()))) {
+            return;
+        }
+        throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "Only a team captain can cancel a team match"
+        );
     }
 
     private Long idOf(User user) {
