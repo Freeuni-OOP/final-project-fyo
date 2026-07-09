@@ -78,7 +78,7 @@ export function TeamsView() {
       <footer className="foot">
         <div className="foot__brand">
           <Wordmark onClick={goHome} />
-          <p>Find your oponent. Tbilisi, Georgia.</p>
+          <p>Find your opponent. Tbilisi, Georgia.</p>
         </div>
         <p className="foot__fine">© 2026 FYO · A student project · Tbilisi, Georgia</p>
       </footer>
