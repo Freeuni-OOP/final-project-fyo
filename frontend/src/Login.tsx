@@ -1,15 +1,25 @@
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebase";
-import { authRequest, AuthApiError } from "./authApi";
+import { authRequest, AuthApiError, type AuthUser } from "./authApi";
 import { Button, Wordmark } from "./teams/ui";
 import "./teams/theme.css";
 import "./teams/teams.css";
 import "./auth.css";
 
+const CURRENT_USER_ID_KEY = "fyo.currentUserId";
+
 const goHome = () => {
   window.location.hash = "#/";
 };
+
+function storeCurrentUserId(userId: number) {
+  try {
+    sessionStorage.setItem(CURRENT_USER_ID_KEY, String(userId));
+  } catch {
+    /* ignore storage failures */
+  }
+}
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -23,21 +33,21 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Firebase checks the password and returns a signed ID token; the
-      // backend verifies that token and loads our local user for it.
       const credential = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await credential.user.getIdToken();
+
+      let authUser: AuthUser;
       try {
-        await authRequest("/api/auth/login", idToken);
+        authUser = await authRequest("/api/auth/login", idToken);
       } catch (err) {
-        // Firebase account exists but our DB row is missing (an earlier
-        // signup died halfway) — the idempotent signup endpoint creates it.
         if (err instanceof AuthApiError && err.status === 404) {
-          await authRequest("/api/auth/signup", idToken);
+          authUser = await authRequest("/api/auth/signup", idToken);
         } else {
           throw err;
         }
       }
+
+      storeCurrentUserId(authUser.id);
       window.location.hash = "#/teams";
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong during login");
@@ -54,7 +64,7 @@ export default function Login() {
           <a href="#/teams">Teams</a>
         </nav>
         <Button variant="ghost" className="bar__cta" onClick={goHome}>
-          ← Home
+          Home
         </Button>
       </header>
 
@@ -96,7 +106,7 @@ export default function Login() {
           )}
 
           <Button variant="solid" type="submit" disabled={loading}>
-            {loading ? "Logging in…" : "Log in"}
+            {loading ? "Logging in..." : "Log in"}
           </Button>
         </form>
 
