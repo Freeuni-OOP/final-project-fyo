@@ -140,10 +140,10 @@ public class ProfileService {
         return new MatchHistoryItemResponse(
                 match.getId(),
                 match.getSport().getSportName(),
-                match.getFormat(),
-                match.getStatus(),
+                match.getFormat().name(),
+                match.getStatus().name(),
                 match.getLocation(),
-                match.getProposedDatetime(),
+                match.getProposedDatetime() != null ? match.getProposedDatetime().toInstant() : null,
                 opponent != null ? opponent.getId() : null,
                 opponent != null ? opponent.getUsername() : null,
                 match.getHomeTeam() != null ? match.getHomeTeam().getId() : null,
@@ -152,7 +152,7 @@ public class ProfileService {
                 match.getAwayTeam() != null ? match.getAwayTeam().getName() : null,
                 result != null ? result.getHomeScore() : null,
                 result != null ? result.getAwayScore() : null,
-                result != null ? result.getWinner() : null
+                result != null ? result.getWinner().name() : null
         );
     }
 
