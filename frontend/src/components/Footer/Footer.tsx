@@ -18,9 +18,9 @@ export function Footer() {
         </div>
         <div className="foot__col">
           <span className="foot__h">Teams</span>
-          <a href="#teams">For captains</a>
-          <a href="#teams">Roster fill</a>
-          <a href="#how">Match reports</a>
+          <a href="#/teams">For captains</a>
+          <a href="#/teams">Roster fill</a>
+          <a href="#/matches">Match reports</a>
         </div>
         <div className="foot__col">
           <span className="foot__h">FYO</span>
