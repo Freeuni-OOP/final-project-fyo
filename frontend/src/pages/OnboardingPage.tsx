@@ -28,6 +28,7 @@ export function OnboardingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [prefill] = useState(readSignupPrefill);
+  const [signedInUserId] = useState(() => readCurrentUserId());
 
   useEffect(() => {
     getSports()
@@ -51,6 +52,10 @@ export function OnboardingPage() {
       await refresh();
       window.location.hash = "#/app";
     } catch (err) {
+      if (err instanceof NotAuthenticatedError) {
+        setSubmitError("You need to sign in to complete onboarding.");
+        return;
+      }
       const msg = err instanceof Error ? err.message : "Something went wrong.";
       if (msg.toLowerCase().includes("username")) {
         setSubmitError("That username is already taken — try another one.");
@@ -99,7 +104,16 @@ export function OnboardingPage() {
       </aside>
 
       <main className="ob-page__main">
-        {sportsError ? (
+        {signedInUserId === null ? (
+          <div className="ob-page__load-error">
+            <p>You need to sign in to complete onboarding.</p>
+            <p>
+              <a href="#/login">Log in</a>
+              {" · "}
+              <a href="#/signup">Sign up</a>
+            </p>
+          </div>
+        ) : sportsError ? (
           <p className="ob-page__load-error">
             Could not load sports. Make sure the backend is running and refresh.
           </p>

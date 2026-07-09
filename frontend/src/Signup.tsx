@@ -20,8 +20,6 @@ export default function Signup() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Mismatch is shown live once the user has left the confirm field, so they
-  // aren't scolded while still typing.
   const passwordsMatch = password === passwordConfirm;
   const showMismatch = confirmTouched && passwordConfirm !== "" && !passwordsMatch;
 
@@ -63,6 +61,7 @@ export default function Signup() {
         <Wordmark onClick={goHome} />
         <nav className="bar__nav" aria-label="Primary">
           <a href="#/teams">Teams</a>
+          <a href="#/profile">Profile</a>
         </nav>
         <Button variant="ghost" className="bar__cta" onClick={goHome}>
           Home

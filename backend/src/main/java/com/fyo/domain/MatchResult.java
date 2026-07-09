@@ -76,13 +76,15 @@ public class MatchResult {
         return match;
     }
 
-    public short getHomeScore() {
+
+    public Short getHomeScore() {
         return homeScore;
     }
 
-    public short getAwayScore() {
+    public Short getAwayScore() {
         return awayScore;
     }
+
 
     public MatchWinner getWinner() {
         return winner;

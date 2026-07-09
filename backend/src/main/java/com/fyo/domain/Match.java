@@ -33,6 +33,7 @@ public class Match {
     @JoinColumn(name = "sport_id", nullable = false)
     private Sport sport;
 
+  
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MatchFormat format;

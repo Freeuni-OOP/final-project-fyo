@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8081";
+import { requireCurrentUserId } from "../auth/session";
 
 const CURRENT_USER_ID_KEY = "fyo.currentUserId";
 

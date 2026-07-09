@@ -1,5 +1,7 @@
 import { LandingPage } from "./pages/LandingPage";
 import { OnboardingPage } from "./pages/OnboardingPage";
+import { ProfilePage } from "./profile/ProfilePage";
+import { PublicProfilePage } from "./profile/PublicProfilePage";
 import { TeamsView } from "./teams/TeamsView";
 import { AppShell } from "./app/AppShell";
 import { Dashboard } from "./app/pages/Dashboard";
