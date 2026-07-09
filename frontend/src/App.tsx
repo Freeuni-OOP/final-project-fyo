@@ -30,8 +30,12 @@ function Landing() {
   );
 }
 
-/** Minimal hash router. `#/teams` / `#/matches` open feature views;
- *  anything else is the landing page (in-page anchors like `#sports` work). */
+/**
+ * Minimal hash router. Feature routes use the `#/...` form (e.g. `#/teams`,
+ * `#/matches`). Keep nav links consistent with that — `#matches` (no slash)
+ * is not the same route. Trailing slashes are stripped so `#/matches/` still
+ * matches. Anything else is the landing page (in-page anchors like `#sports` work).
+ */
 function useHashRoute(): string {
   const [hash, setHash] = useState(() =>
     typeof window !== "undefined" ? window.location.hash : ""
@@ -43,12 +47,13 @@ function useHashRoute(): string {
     return () => window.removeEventListener("hashchange", onChange);
   }, []);
 
-  return hash;
+  return hash.replace(/\/+$/, "") || hash;
 }
 
 export default function App() {
   const hash = useHashRoute();
 
+  // Feature views: `#/teams`, `#/matches` (see useHashRoute comment above).
   if (hash.startsWith("#/teams")) {
     return <TeamsView />;
   }
