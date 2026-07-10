@@ -14,7 +14,7 @@ export function TopBar() {
         <a href="#sports">Sports</a>
         <a href="#how">How it works</a>
         <a href={authed ? "#/app/teams" : "#/teams"}>Teams</a>
-        {authed && <a href="#/chat">Chat</a>}
+        {authed && <a href="#/app/chat">Chat</a>}
         {!authed && <a href="#/login">Log in</a>}
         {!authed && <a href="#/signup">Sign up</a>}
       </nav>

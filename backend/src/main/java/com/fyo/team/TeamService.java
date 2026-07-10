@@ -270,6 +270,11 @@ public class TeamService {
         }
     }
 
+    private User requireUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+    }
+
     private TeamSummaryResponse toSummaryResponse(Team team) {
         return new TeamSummaryResponse(
                 team.getId(),

@@ -17,7 +17,7 @@ import {
   type User as FirebaseUser,
   type UserCredential,
 } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, requireFirebaseAuth } from "../firebase";
 import { AuthApiError, authRequest, type AuthUser } from "../authApi";
 
 const CURRENT_USER_ID_KEY = "fyo.currentUserId";
@@ -77,8 +77,9 @@ function messageOf(err: unknown): string {
 
 /** Drops the Firebase session, ignoring failures — we are already on an error path. */
 async function abandonFirebaseSession(): Promise<void> {
+  if (!auth) return;
   try {
-    await firebaseSignOut(auth);
+    if (auth) await firebaseSignOut(auth);
   } catch {
     /* nothing better to do */
   }
@@ -142,6 +143,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let alive = true;
 
+    if (!auth) {
+      clearUserId();
+      setUser(null);
+      setStatus("anon");
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (inFlow.current) return;
 
@@ -191,7 +199,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     async (email: string, password: string) => {
       inFlow.current = true;
       try {
-        const credential = await signInWithEmailAndPassword(auth, email, password);
+        const credential = await signInWithEmailAndPassword(requireFirebaseAuth(), email, password);
         try {
           adopt(await resolveBackendUser(credential.user, pending.current));
         } catch (err) {
@@ -213,13 +221,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       try {
         let credential: UserCredential;
         try {
-          credential = await createUserWithEmailAndPassword(auth, email, password);
+          credential = await createUserWithEmailAndPassword(requireFirebaseAuth(), email, password);
         } catch (err) {
           // The Firebase account can outlive a failed signup. If the password
           // matches, sign in and let the idempotent backend signup below fill
           // in the missing row — this time with the name.
           if (err instanceof FirebaseError && err.code === "auth/email-already-in-use") {
-            credential = await signInWithEmailAndPassword(auth, email, password);
+            credential = await signInWithEmailAndPassword(requireFirebaseAuth(), email, password);
           } else {
             throw err;
           }
@@ -243,7 +251,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   );
 
   const retry = useCallback(async () => {
-    const firebaseUser = auth.currentUser;
+    const firebaseUser = auth?.currentUser;
     if (!firebaseUser) {
       forgetUser();
       return;
@@ -265,7 +273,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [adopt, forgetUser]);
 
   const refresh = useCallback(async () => {
-    const firebaseUser = auth.currentUser;
+    const firebaseUser = auth?.currentUser;
     if (!firebaseUser) {
       forgetUser();
       return;
@@ -280,7 +288,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     // redirects, so either order out of those two would bounce through one.
     // `#/home` renders the landing page whatever the status is.
     window.location.hash = "#/home";
-    await firebaseSignOut(auth);
+    if (auth) await firebaseSignOut(auth);
     clearUserId();
     setUser(null);
     setError(null);
@@ -305,3 +313,5 @@ export function useSession(): Session {
 export function displayNameOf(user: AuthUser): string {
   return user.name?.trim() || user.username || "player";
 }
+
+

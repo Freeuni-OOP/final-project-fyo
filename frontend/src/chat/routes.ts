@@ -1,16 +1,16 @@
-/** Parsed `#/chat` hash routes. */
+/** Parsed chat hash routes under the app shell, with legacy #/chat support. */
 export interface ChatRoute {
   conversationId: number | null;
   matchId: number | null;
 }
 
 export function parseChatRoute(hash: string): ChatRoute {
-  const matchPath = hash.match(/^#\/chat\/match\/(\d+)(?:[/?]|$)/);
+  const matchPath = hash.match(/^#\/(?:app\/)?chat\/match\/(\d+)(?:[/?]|$)/);
   if (matchPath) {
     return { conversationId: null, matchId: Number(matchPath[1]) };
   }
 
-  const conversationPath = hash.match(/^#\/chat\/(\d+)(?:[/?]|$)/);
+  const conversationPath = hash.match(/^#\/(?:app\/)?chat\/(\d+)(?:[/?]|$)/);
   if (conversationPath) {
     return { conversationId: Number(conversationPath[1]), matchId: null };
   }
@@ -19,9 +19,9 @@ export function parseChatRoute(hash: string): ChatRoute {
 }
 
 export function chatConversationPath(conversationId: number): string {
-  return `#/chat/${conversationId}`;
+  return `#/app/chat/${conversationId}`;
 }
 
 export function chatMatchPath(matchId: number): string {
-  return `#/chat/match/${matchId}`;
+  return `#/app/chat/match/${matchId}`;
 }

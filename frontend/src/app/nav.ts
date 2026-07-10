@@ -11,6 +11,7 @@ export const NAV: NavItem[] = [
   { label: "My teams", href: "#/app/my-teams" },
   { label: "Friends", href: "#/app/friends" },
   { label: "Matches", href: "#/app/matches" },
+  { label: "Messages", href: "#/app/chat" },
   { label: "Profile", href: "#/app/profile" },
   { label: "Admin", href: "#/app/admin" },
 ];

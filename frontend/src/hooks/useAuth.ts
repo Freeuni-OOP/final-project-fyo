@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { onAuthStateChanged, signOut as firebaseSignOut, type User } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth, requireFirebaseAuth } from "../firebase";
 
 export interface AuthSession {
   user: User | null;
@@ -14,10 +14,16 @@ export interface AuthSession {
  * grab a fresh ID token for Bearer-authenticated API calls.
  */
 export function useAuth(): AuthSession {
-  const [user, setUser] = useState<User | null>(auth.currentUser);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(auth?.currentUser ?? null);
+  const [loading, setLoading] = useState(Boolean(auth));
 
   useEffect(() => {
+    if (!auth) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
     const unsub = onAuthStateChanged(auth, (next) => {
       setUser(next);
       setLoading(false);
@@ -26,13 +32,13 @@ export function useAuth(): AuthSession {
   }, []);
 
   const getIdToken = useCallback(async (): Promise<string | null> => {
-    const current = auth.currentUser;
+    const current = auth?.currentUser;
     if (!current) return null;
     return current.getIdToken();
   }, []);
 
   const signOut = useCallback(async () => {
-    await firebaseSignOut(auth);
+    await firebaseSignOut(requireFirebaseAuth());
   }, []);
 
   return { user, loading, getIdToken, signOut };

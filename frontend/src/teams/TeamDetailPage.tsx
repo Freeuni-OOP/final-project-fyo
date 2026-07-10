@@ -53,9 +53,12 @@ export function TeamDetailPage({ teamId, backHref, currentUserId }: TeamDetailPa
     if (!team || !currentUserId || team.captain.id !== currentUserId) return;
     let alive = true;
     setLoadingRequests(true);
-    teamsApi
-      .getPendingRequests(teamId)
-      .then((t) => alive && setPendingRequests(t))
+    getIdToken().then((token) => {
+      if (!token || !alive) return;
+      teamsApi
+        .getPendingRequests(token, teamId)
+        .then((t) => alive && setPendingRequests(t));
+    })
       .catch(() => {})
       .finally(() => alive && setLoadingRequests(false));
 
@@ -271,3 +274,4 @@ export function TeamDetailPage({ teamId, backHref, currentUserId }: TeamDetailPa
     </article>
   );
 }
+

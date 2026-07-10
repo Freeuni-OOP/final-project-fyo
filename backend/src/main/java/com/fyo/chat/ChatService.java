@@ -16,6 +16,8 @@ import com.fyo.repository.ChatMessageRepository;
 import com.fyo.repository.ConversationParticipantRepository;
 import com.fyo.repository.ConversationRepository;
 import com.fyo.repository.TeamMemberRepository;
+import com.fyo.repository.TeamRepository;
+import com.fyo.repository.MatchRepository;
 import com.fyo.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,6 +25,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.format.DateTimeFormatter;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -33,25 +36,32 @@ import org.springframework.web.server.ResponseStatusException;
 public class ChatService {
 
     private static final int MAX_MESSAGE_PAGE = 100;
+    private static final DateTimeFormatter MATCH_TIME_FORMAT = DateTimeFormatter.ofPattern("MMM d, HH:mm");
 
     private final ConversationRepository conversationRepository;
     private final ConversationParticipantRepository participantRepository;
     private final ChatMessageRepository messageRepository;
     private final UserRepository userRepository;
     private final TeamMemberRepository teamMemberRepository;
+    private final TeamRepository teamRepository;
+    private final MatchRepository matchRepository;
 
     public ChatService(
             ConversationRepository conversationRepository,
             ConversationParticipantRepository participantRepository,
             ChatMessageRepository messageRepository,
             UserRepository userRepository,
-            TeamMemberRepository teamMemberRepository
+            TeamMemberRepository teamMemberRepository,
+            TeamRepository teamRepository,
+            MatchRepository matchRepository
     ) {
         this.conversationRepository = conversationRepository;
         this.participantRepository = participantRepository;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
         this.teamMemberRepository = teamMemberRepository;
+        this.teamRepository = teamRepository;
+        this.matchRepository = matchRepository;
     }
 
     @Transactional(readOnly = true)
@@ -253,12 +263,64 @@ public class ChatService {
                 conversation.getType(),
                 conversation.getMatchId(),
                 conversation.getTeamId(),
+                conversationTitle(conversation, participants),
+                conversationSubtitle(conversation),
                 participants,
                 lastMessage,
                 conversation.getCreatedAt()
         );
     }
 
+
+    private String conversationTitle(Conversation conversation, List<ConversationParticipantResponse> participants) {
+        return switch (conversation.getType()) {
+            case TEAM -> teamRepository.findById(conversation.getTeamId())
+                    .map(Team::getName)
+                    .orElse("Team chat");
+            case MATCH -> matchRepository.findById(conversation.getMatchId())
+                    .map(this::matchTitle)
+                    .orElse("Match chat");
+            case DIRECT -> participants.stream()
+                    .map(ConversationParticipantResponse::fullName)
+                    .limit(2)
+                    .reduce((left, right) -> left + ", " + right)
+                    .orElse("Direct chat");
+        };
+    }
+
+    private String conversationSubtitle(Conversation conversation) {
+        return switch (conversation.getType()) {
+            case TEAM -> teamRepository.findById(conversation.getTeamId())
+                    .map(team -> team.getSport().getSportName()
+                            + (team.getRegion() == null || team.getRegion().isBlank() ? "" : " - " + team.getRegion()))
+                    .orElse(null);
+            case MATCH -> matchRepository.findById(conversation.getMatchId())
+                    .map(this::matchSubtitle)
+                    .orElse(null);
+            case DIRECT -> null;
+        };
+    }
+
+    private String matchTitle(Match match) {
+        if (match.getFormat() == MatchFormat.TEAM_VS_TEAM) {
+            return match.getHomeTeam().getName() + " vs " + match.getAwayTeam().getName();
+        }
+        return match.getHomeUser().getName() + " " + match.getHomeUser().getSurname()
+                + " vs " + match.getAwayUser().getName() + " " + match.getAwayUser().getSurname();
+    }
+
+    private String matchSubtitle(Match match) {
+        List<String> parts = new ArrayList<>();
+        parts.add(match.getSport().getSportName());
+        if (match.getProposedDatetime() != null) {
+            parts.add(match.getProposedDatetime().format(MATCH_TIME_FORMAT));
+        }
+        if (match.getLocation() != null && !match.getLocation().isBlank()) {
+            parts.add(match.getLocation());
+        }
+        parts.add(match.getStatus().name().replace('_', ' '));
+        return String.join(" - ", parts);
+    }
     private ConversationParticipantResponse toParticipantResponse(ConversationParticipant participant) {
         User user = participant.getUser();
         return new ConversationParticipantResponse(
@@ -282,3 +344,5 @@ public class ChatService {
         );
     }
 }
+
+

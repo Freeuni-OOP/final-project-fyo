@@ -22,7 +22,10 @@ export interface Conversation {
   type: ConversationType;
   matchId: number | null;
   teamId: number | null;
+  title: string | null;
+  subtitle: string | null;
   participants: ConversationParticipant[];
   lastMessage: ChatMessage | null;
   createdAt: string;
 }
+

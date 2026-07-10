@@ -9,8 +9,11 @@ public record ConversationResponse(
         ConversationType type,
         Long matchId,
         Long teamId,
+        String title,
+        String subtitle,
         List<ConversationParticipantResponse> participants,
         ChatMessageResponse lastMessage,
         OffsetDateTime createdAt
 ) {
 }
+

@@ -98,6 +98,13 @@
   color: var(--ink-45);
 }
 
+.court .chat__thread-subtitle {
+  margin: 8px 0 0;
+  color: var(--ink-45);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
 .court .chat__label,
 .court .chat__start label,
 .court .chat__list-head {
@@ -204,6 +211,67 @@
   margin-top: 24px;
   padding-top: 22px;
   border-top: 1px solid var(--hair);
+}
+
+.court .chat__search-results {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+  border: 1px solid var(--hair);
+  background: var(--chalk);
+}
+
+.court .chat__search-results p {
+  margin: 0;
+  padding: 10px 12px;
+  color: var(--ink-45);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+}
+
+.court .chat__search-results button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-bottom: 1px solid var(--hair);
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.court .chat__search-results button:last-child {
+  border-bottom: 0;
+}
+
+.court .chat__search-results button:hover,
+.court .chat__search-results button:focus-visible {
+  background: var(--chalk-2);
+}
+
+.court .chat__search-results span {
+  display: grid;
+  min-width: 0;
+}
+
+.court .chat__search-results strong,
+.court .chat__search-results small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.court .chat__search-results strong {
+  font-size: 0.88rem;
+}
+
+.court .chat__search-results small {
+  color: var(--ink-45);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
 }
 
 .court .chat__list-head {
@@ -404,3 +472,5 @@
   border-color: var(--ink);
   color: var(--ink);
 }
+
+
