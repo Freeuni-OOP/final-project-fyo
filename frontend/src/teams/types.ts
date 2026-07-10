@@ -55,10 +55,13 @@ export interface CreateTeamPayload {
   maxPlayers: number;
   isRecruiting: boolean;
   captainUserId: number;
+  /** Players the captain seats up front. The captain is added regardless. */
+  memberUserIds: number[];
 }
 
 export type JoinRequestStatus = "PENDING" | "ACCEPTED" | "DECLINED";
 
+/** A request as its captain sees it: it names the applicant. */
 export interface JoinRequest {
   id: number;
   teamId: number;
@@ -68,4 +71,20 @@ export interface JoinRequest {
   imageUrl: string | null;
   status: JoinRequestStatus;
   createdAt: string;
+}
+
+/** The same request as its applicant sees it: it names the team. Never ACCEPTED —
+ *  once accepted, the team shows up in `MyTeam` instead. */
+export interface MyJoinRequest {
+  id: number;
+  team: TeamSummary;
+  status: JoinRequestStatus;
+  createdAt: string;
+}
+
+/** A team the signed-in user plays for, and how they relate to it. */
+export interface MyTeam {
+  team: TeamSummary;
+  role: TeamMemberRole;
+  joinedAt: string;
 }

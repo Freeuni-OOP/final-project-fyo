@@ -20,7 +20,7 @@ export function Sidebar({ activeHash, onNavigate }: SidebarProps) {
 
       <nav className="shell__navlist">
         <p className="shell__navhead">Menu</p>
-        {NAV.map((item) =>
+        {NAV.filter(item => item.href !== "#/app/admin" || user?.admin).map((item) =>
           item.soon ? (
             <span className="navitem navitem--soon" key={item.href} aria-disabled="true">
               {item.label}

@@ -1,11 +1,21 @@
 import { request } from "../api/http";
-import type { CreateTeamPayload, TeamDetails, TeamSummary, JoinRequest } from "./types";
+import type {
+  CreateTeamPayload,
+  JoinRequest,
+  MyJoinRequest,
+  MyTeam,
+  TeamDetails,
+  TeamSummary,
+} from "./types";
 
 export { ApiError } from "../api/http";
 
 export const teamsApi = {
   list: () => request<TeamSummary[]>("/api/teams"),
   get: (id: number) => request<TeamDetails>(`/api/teams/${id}`),
+  myTeams: (userId: number) => request<MyTeam[]>(`/api/teams/mine?userId=${userId}`),
+  myJoinRequests: (userId: number) =>
+    request<MyJoinRequest[]>(`/api/teams/my-requests?userId=${userId}`),
   create: (body: CreateTeamPayload) =>
     request<TeamDetails>("/api/teams", {
       method: "POST",

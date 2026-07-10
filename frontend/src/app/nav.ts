@@ -8,8 +8,11 @@ export interface NavItem {
 export const NAV: NavItem[] = [
   { label: "Dashboard", href: "#/app" },
   { label: "Teams", href: "#/app/teams" },
-  { label: "Matches", href: "#/app/matches", soon: true },
-  { label: "Profile", href: "#/app/profile", soon: true },
+  { label: "My teams", href: "#/app/my-teams" },
+  { label: "Friends", href: "#/app/friends" },
+  { label: "Matches", href: "#/app/matches" },
+  { label: "Profile", href: "#/app/profile" },
+  { label: "Admin", href: "#/app/admin" },
 ];
 
 export function isNavItemActive(item: NavItem, hash: string): boolean {

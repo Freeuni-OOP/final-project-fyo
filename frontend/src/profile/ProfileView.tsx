@@ -1,4 +1,5 @@
 import { Avatar } from "../teams/ui";
+import { chatMatchPath } from "../chat/routes";
 import type { Profile } from "./types";
 import "./profile.css";
 
@@ -88,6 +89,11 @@ export function ProfileView({
                   <p className="pf-card__score">
                     Score {match.homeScore ?? "—"}–{match.awayScore ?? "—"}
                     {match.winner ? ` · ${match.winner}` : ""}
+                  </p>
+                )}
+                {match.status === "UPCOMING" && (
+                  <p className="pf-card__actions">
+                    <a href={chatMatchPath(match.matchId)}>Open match chat →</a>
                   </p>
                 )}
               </li>

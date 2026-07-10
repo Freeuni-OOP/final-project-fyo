@@ -28,6 +28,24 @@ export function isRoot(hash: string): boolean {
 }
 
 /**
+ * The segment right after `route`, or null when the hash *is* the route.
+ * `#/app/teams/12` → `"12"`; `#/app/teams` and `#/app/teams/` → `null`.
+ */
+export function routeParam(hash: string, route: string): string | null {
+  if (!hash.startsWith(`${route}/`)) return null;
+  const segment = hash.slice(route.length + 1).split(/[/?]/)[0];
+  return segment === "" ? null : segment;
+}
+
+/** `routeParam` narrowed to a positive integer id — null for `#/teams/abc`. */
+export function routeId(hash: string, route: string): number | null {
+  const raw = routeParam(hash, route);
+  if (raw === null || !/^\d+$/.test(raw)) return null;
+  const id = Number(raw);
+  return id > 0 ? id : null;
+}
+
+/**
  * Navigates in an effect rather than during render, so React never sees a
  * state update from another component mid-render.
  */
