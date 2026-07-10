@@ -29,4 +29,58 @@ Class AdminServiceTests() {
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("No non-admin user in test data"));
     }
+
+    @Test
+    void nonAdminCannotGetUsers() {
+        User nonAdmin = getNonAdminUser();
+
+        assertThatThrownBy(() -> adminService.getUsers(nonAdmin.getId()))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("User is not an admin");
+    }
+
+    @Test
+    void nonAdminCannotGetTeams() {
+        User nonAdmin = getNonAdminUser();
+
+        assertThatThrownBy(() -> adminService.getTeams(nonAdmin.getId()))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("User is not an admin");
+    }
+
+    @Test
+    void nonAdminCannotGetSports() {
+        User nonAdmin = getNonAdminUser();
+
+        assertThatThrownBy(() -> adminService.getSports(nonAdmin.getId()))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("User is not an admin");
+    }
+
+    @Test
+    void adminCanGetUsers() {
+        User admin = getAdminUser();
+
+        List<UserAdminResponse> users = adminService.getUsers(admin.getId());
+
+        assertThat(users).isNotEmpty();
+    }
+
+    @Test
+    void adminCanGetTeams() {
+        User admin = getAdminUser();
+
+        List<TeamAdminResponse> teams = adminService.getTeams(admin.getId());
+
+        assertThat(teams).isNotNull();
+    }
+
+    @Test
+    void adminCanGetSports() {
+        User admin = getAdminUser();
+
+        List<SportAdminResponse> sports = adminService.getSports(admin.getId());
+
+        assertThat(sports).isNotEmpty();
+    }
 }
