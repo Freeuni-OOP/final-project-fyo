@@ -60,6 +60,7 @@ public class TeamController {
     }
 
     @PostMapping("/{id}/join-requests/{requestId}/accept")
+
     public JoinRequestResponse acceptJoinRequest(@PathVariable Long id,
                                                  @PathVariable Long requestId,
                                                  @RequestParam Long captainUserId) {
@@ -71,5 +72,6 @@ public class TeamController {
                                                   @PathVariable Long requestId,
                                                   @RequestParam Long captainUserId) {
         return teamService.declineJoinRequest(id, requestId, captainUserId);
+
     }
 }

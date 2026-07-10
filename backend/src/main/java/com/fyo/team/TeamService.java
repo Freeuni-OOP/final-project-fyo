@@ -216,6 +216,7 @@ public class TeamService {
 
         Team team = joinRequest.getTeam();
 
+
         if (!team.getCaptain().getId().equals(captainUserId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the captain can accept requests");
         }
@@ -263,9 +264,9 @@ public class TeamService {
                 .toList();
     }
 
-    private void requireUser(Long userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+    private void requireCaptain(Team team, Long actingUserId) {
+        if (!team.getCaptain().getId().equals(actingUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the team captain can manage join requests");
         }
     }
 
