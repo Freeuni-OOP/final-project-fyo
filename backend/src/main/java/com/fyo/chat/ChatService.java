@@ -17,10 +17,13 @@ import com.fyo.repository.ConversationParticipantRepository;
 import com.fyo.repository.ConversationRepository;
 import com.fyo.repository.TeamMemberRepository;
 import com.fyo.repository.UserRepository;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,13 +62,40 @@ public class ChatService {
                 .toList();
     }
 
+    private static final int MAX_MESSAGE_PAGE = 100;
+
     @Transactional(readOnly = true)
-    public List<ChatMessageResponse> getMessages(Long conversationId, Long userId) {
+    public ConversationResponse getConversationByMatch(Long matchId, Long userId) {
+        Conversation conversation = conversationRepository.findByMatchId(matchId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No conversation for this match"));
+        ensureParticipant(conversation.getId(), userId);
+        return toConversationResponse(conversation);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ChatMessageResponse> getMessages(Long conversationId, Long userId, Long beforeMessageId, int limit) {
         ensureConversationExists(conversationId);
         ensureParticipant(conversationId, userId);
-        return messageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId).stream()
-                .map(this::toMessageResponse)
-                .toList();
+
+        int pageSize = Math.clamp(limit, 1, MAX_MESSAGE_PAGE);
+        List<ChatMessage> page;
+
+        if (beforeMessageId == null) {
+            page = new ArrayList<>(messageRepository.findByConversationIdOrderByCreatedAtDesc(
+                    conversationId, PageRequest.of(0, pageSize)));
+            Collections.reverse(page);
+        } else {
+            ChatMessage cursor = messageRepository.findById(beforeMessageId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Message not found"));
+            if (!cursor.getConversation().getId().equals(conversationId)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Message does not belong to this conversation");
+            }
+            page = new ArrayList<>(messageRepository.findByConversationIdAndCreatedAtLessThanOrderByCreatedAtDesc(
+                    conversationId, cursor.getCreatedAt(), PageRequest.of(0, pageSize)));
+            Collections.reverse(page);
+        }
+
+        return page.stream().map(this::toMessageResponse).toList();
     }
 
     /**

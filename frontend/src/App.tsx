@@ -17,7 +17,7 @@ import Signup from "./Signup";
 /**
  * Hash routes:
  *   public   #/  #/home  #/login  #/signup  #/teams
- *   signed in  #/app  #/app/teams  #/onboarding  #/chat
+ *   signed in  #/app  #/app/teams  #/onboarding  #/chat  #/chat/:id  #/chat/match/:matchId
  *
  * Signed-in users are redirected off the public marketing pages and into the
  * platform shell. In-page anchors on the landing page (`#sports`, `#how`) are

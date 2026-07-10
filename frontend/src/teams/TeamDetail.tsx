@@ -121,9 +121,29 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
     }
   }
 
+  async function openTeamChat() {
+    if (!currentUserId) return;
+    setOpeningChat(true);
+    try {
+      const token = await getIdToken();
+      if (!token) throw new ApiError(401, "Sign in to open team chat.");
+      const conversation = await chatApi.createTeam(token, teamId);
+      window.location.hash = `#/chat/${conversation.id}`;
+      onClose();
+    } catch (err) {
+      alert((err as ApiError).message);
+    } finally {
+      setOpeningChat(false);
+    }
+  }
+
   const filled = team ? team.maxPlayers - team.openSpots : 0;
   const pct = team ? Math.round((filled / team.maxPlayers) * 100) : 0;
   const isCaptain = team && currentUserId && team.captain.id === currentUserId;
+  const isMember =
+    !!team &&
+    !!currentUserId &&
+    (isCaptain || team.members.some((member) => member.userId === currentUserId));
 
   return (
     <div className="drawer" role="dialog" aria-modal="true" aria-label="Team details">
@@ -169,6 +189,14 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
             </span>
 
             {team.description && <p className="td__desc">{team.description}</p>}
+
+            {isMember && (
+              <div className="td__chat-entry">
+                <Button variant="optic" onClick={() => void openTeamChat()} disabled={openingChat}>
+                  {openingChat ? "Opening chat…" : "Open team chat →"}
+                </Button>
+              </div>
+            )}
 
             <div className="td__roster-meta">
               <div className="meter">
