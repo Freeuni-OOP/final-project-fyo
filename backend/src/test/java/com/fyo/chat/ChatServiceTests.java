@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.fyo.chat.dto.ChatMessageResponse;
 import com.fyo.chat.dto.ConversationResponse;
 import com.fyo.chat.dto.CreateDirectConversationRequest;
-import com.fyo.chat.dto.SendChatMessageRequest;
 import com.fyo.domain.User;
 import com.fyo.repository.UserRepository;
 import java.util.List;
@@ -33,7 +32,8 @@ class ChatServiceTests {
         User userB = users.get(1);
 
         ConversationResponse conversation = chatService.createDirectConversation(
-                new CreateDirectConversationRequest(userA.getId(), userB.getId(), null)
+                userA.getId(),
+                new CreateDirectConversationRequest(userB.getId(), null)
         );
 
         assertThat(conversation.id()).isNotNull();
@@ -43,18 +43,29 @@ class ChatServiceTests {
     }
 
     @Test
+    void createDirectConversationRejectsSelf() {
+        User userA = userRepository.findAll().get(0);
+
+        assertThatThrownBy(() -> chatService.createDirectConversation(
+                userA.getId(),
+                new CreateDirectConversationRequest(userA.getId(), null)
+        ))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Conversation needs two different users");
+    }
+
+    @Test
     void sendMessageSavesMessageForParticipant() {
         List<User> users = userRepository.findAll();
         User sender = users.get(0);
         User receiver = users.get(1);
         ConversationResponse conversation = chatService.createDirectConversation(
-                new CreateDirectConversationRequest(sender.getId(), receiver.getId(), null)
+                sender.getId(),
+                new CreateDirectConversationRequest(receiver.getId(), null)
         );
 
         ChatMessageResponse sent = chatService.sendMessage(
-                conversation.id(),
-                new SendChatMessageRequest(sender.getId(), "  hello from chat  ")
-        );
+                conversation.id(), sender.getId(), "  hello from chat  ");
 
         assertThat(sent.id()).isNotNull();
         assertThat(sent.senderId()).isEqualTo(sender.getId());
@@ -71,13 +82,12 @@ class ChatServiceTests {
         User userB = users.get(1);
         User outsider = users.get(2);
         ConversationResponse conversation = chatService.createDirectConversation(
-                new CreateDirectConversationRequest(userA.getId(), userB.getId(), null)
+                userA.getId(),
+                new CreateDirectConversationRequest(userB.getId(), null)
         );
 
         assertThatThrownBy(() -> chatService.sendMessage(
-                conversation.id(),
-                new SendChatMessageRequest(outsider.getId(), "not allowed")
-        ))
+                conversation.id(), outsider.getId(), "not allowed"))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("User is not a conversation participant");
     }
@@ -89,7 +99,8 @@ class ChatServiceTests {
         User userB = users.get(1);
         User outsider = users.get(2);
         ConversationResponse conversation = chatService.createDirectConversation(
-                new CreateDirectConversationRequest(userA.getId(), userB.getId(), null)
+                userA.getId(),
+                new CreateDirectConversationRequest(userB.getId(), null)
         );
 
         assertThatThrownBy(() -> chatService.getMessages(conversation.id(), outsider.getId()))
@@ -103,13 +114,11 @@ class ChatServiceTests {
         User userA = users.get(0);
         User userB = users.get(1);
         ConversationResponse conversation = chatService.createDirectConversation(
-                new CreateDirectConversationRequest(userA.getId(), userB.getId(), null)
+                userA.getId(),
+                new CreateDirectConversationRequest(userB.getId(), null)
         );
 
-        assertThatThrownBy(() -> chatService.sendMessage(
-                conversation.id(),
-                new SendChatMessageRequest(userA.getId(), "   ")
-        ))
+        assertThatThrownBy(() -> chatService.sendMessage(conversation.id(), userA.getId(), "   "))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Message body cannot be blank");
     }
