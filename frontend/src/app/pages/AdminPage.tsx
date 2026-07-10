@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { PageHead } from "../AppShell";
-import { adminApi, AdminApiError } from "../../admin/api";
-import type { UserAdmin, TeamAdmin, SportAdmin } from "../../admin/types";
+import { adminApi, AdminApiError } from "../../Admin/api";
+import type { UserAdmin, TeamAdmin, SportAdmin } from "../../Admin/types";
 import { Button } from "../../teams/ui";
 
 type Tab = "users" | "teams" | "sports";
