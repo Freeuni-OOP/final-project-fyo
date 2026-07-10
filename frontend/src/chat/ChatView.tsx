@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ApiError, chatApi, socketUrl } from "./api";
 import { MiniStompClient, type SocketStatus } from "./stomp";
 import type { ChatMessage, Conversation } from "./types";
+import { consumeOpenChatId } from "../friends/openDirectChat";
 import { useSession } from "../session/SessionContext";
 import { useAuth } from "../hooks/useAuth";
 import { Avatar, Button, Wordmark } from "../teams/ui";
@@ -97,7 +98,12 @@ export function ChatView() {
       const token = await requireToken();
       const loaded = await chatApi.conversations(token);
       setConversations(loaded);
-      setActiveId((current) => current ?? loaded[0]?.id ?? null);
+      const openChatId = consumeOpenChatId();
+      if (openChatId !== null && loaded.some((c) => c.id === openChatId)) {
+        setActiveId(openChatId);
+      } else {
+        setActiveId((current) => current ?? loaded[0]?.id ?? null);
+      }
     } catch (err) {
       setApiError(err);
     } finally {

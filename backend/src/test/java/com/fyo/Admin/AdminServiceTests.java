@@ -18,7 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @SpringBootTest
 @Transactional
-class AdminServiceTests() {
+class AdminServiceTests {
     @Autowired
     private AdminService adminService;
 

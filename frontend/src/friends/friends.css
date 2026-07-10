@@ -1,0 +1,155 @@
+.friends__panel {
+  margin-top: 24px;
+}
+
+.friends__label {
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-45);
+}
+
+.friends__input {
+  width: 100%;
+  max-width: 420px;
+  padding: 12px 13px;
+  border: 1px solid var(--hair-strong);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--ink);
+  font: 0.9rem var(--font-body);
+}
+
+.friends__search {
+  margin-bottom: 8px;
+}
+
+.friends__hint {
+  margin: 12px 0 0;
+  color: var(--ink-45);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+
+.friends__count {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink-45);
+}
+
+.friends__results,
+.friends__list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+.friends__result,
+.friends__profile-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--hair);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.friends__result span,
+.friends__profile-link span {
+  display: grid;
+  gap: 2px;
+}
+
+.friends__profile-link span span {
+  color: var(--ink-45);
+  font-size: 0.85rem;
+}
+
+.friends__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--hair);
+}
+
+.friends__row .friends__profile-link {
+  flex: 1;
+  border-bottom: 0;
+  padding: 0;
+}
+
+.friends__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.friends__error {
+  margin: 8px 0 0;
+  color: #7f1d1d;
+  font-size: 0.85rem;
+}
+
+.friends__dashboard-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.friends__dashboard-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--hair);
+}
+
+.friends__dashboard-row:last-child {
+  border-bottom: 0;
+}
+
+.friends__dashboard-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.friends__dashboard-copy span {
+  color: var(--ink-45);
+  font-size: 0.85rem;
+}
+
+.friends__dashboard-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.friends__dashboard-actions button {
+  padding: 6px 10px;
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+  background: var(--ink);
+  color: var(--chalk);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.friends__dashboard-actions button.ghost {
+  background: transparent;
+  color: var(--ink);
+}

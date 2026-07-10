@@ -6,6 +6,7 @@ import { useTeams } from "../../teams/useTeams";
 import { useReveal } from "../../teams/useReveal";
 import { displayNameOf, useSession } from "../../session/SessionContext";
 import { PageHead } from "../AppShell";
+import { FriendRequestsPanel } from "../../friends/FriendRequestsPanel";
 
 const STATUS_BADGE: Record<MatchStatus, string> = {
   UPCOMING: "badge--open",
@@ -102,6 +103,8 @@ export function Dashboard() {
           <dd>{loading ? "—" : openSpotsTotal}</dd>
         </div>
       </dl>
+
+      <FriendRequestsPanel />
 
       <section className="panel">
         <div className="panel__head">
