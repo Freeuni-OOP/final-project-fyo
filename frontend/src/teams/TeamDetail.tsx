@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { ApiError, teamsApi } from "./api";
+import { chatApi } from "../chat/api";
+import { useAuth } from "../hooks/useAuth";
 import type { TeamDetails, JoinRequest } from "./types";
 import { Avatar, Ball, Button } from "./ui";
 
@@ -37,6 +39,9 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
 
   const [pendingRequests, setPendingRequests] = useState<JoinRequest[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
+
+  const { getIdToken } = useAuth();
+  const [openingChat, setOpeningChat] = useState(false);
 
   useEffect(() => {
     let alive = true;

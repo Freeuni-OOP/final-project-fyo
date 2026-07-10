@@ -4,6 +4,7 @@ import { Wordmark } from "../components/common/Wordmark";
 import { OnboardingForm } from "../components/onboarding/OnboardingForm";
 import { getSports, type SportDto } from "../api/Sports";
 import { submitOnboarding, type OnboardingPayload } from "../api/Onboarding";
+import { NotAuthenticatedError, readCurrentUserId } from "../auth/session";
 import { useSession } from "../session/SessionContext";
 import "./OnboardingPage.css";
 

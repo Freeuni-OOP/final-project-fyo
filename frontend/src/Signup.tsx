@@ -1,4 +1,5 @@
 ﻿import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { useSession } from "./session/SessionContext";
 import { Button, Wordmark } from "./teams/ui";
 import "./teams/theme.css";
@@ -16,6 +17,8 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [confirmTouched, setConfirmTouched] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -109,31 +112,54 @@ export default function Signup() {
 
           <div className="auth__field">
             <label htmlFor="signup-password">Password</label>
-            <input
-              id="signup-password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              aria-invalid={error ? true : undefined}
-              aria-describedby={error ? "signup-error" : undefined}
-            />
+            <div className="auth__password">
+              <input
+                id="signup-password"
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                aria-invalid={error ? true : undefined}
+                aria-describedby={error ? "signup-error" : undefined}
+              />
+
+              <button
+                type="button"
+                className="auth__toggle"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            
           </div>
 
           <div className="auth__field">
             <label htmlFor="signup-password-confirm">Confirm password</label>
-            <input
-              id="signup-password-confirm"
-              type="password"
-              value={passwordConfirm}
-              onChange={(e) => setPasswordConfirm(e.target.value)}
-              onBlur={() => setConfirmTouched(true)}
-              required
-              minLength={6}
-              aria-invalid={showMismatch || undefined}
-              aria-describedby={showMismatch ? "signup-password-confirm-hint" : undefined}
-            />
+            <div className="auth__password">
+              <input
+                id="signup-password-confirm"
+                type={showConfirmPassword ? "text" : "password"}
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                onBlur={() => setConfirmTouched(true)}
+                required
+                minLength={6}
+                aria-invalid={showMismatch || undefined}
+                aria-describedby={showMismatch ? "signup-password-confirm-hint" : undefined}
+              />
+
+              <button
+                type="button"
+                className="auth__toggle"
+                onClick={() => setShowConfirmPassword((v) => !v)}
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
             {showMismatch && (
               <p id="signup-password-confirm-hint" className="auth__error" role="alert">
                 Passwords don't match

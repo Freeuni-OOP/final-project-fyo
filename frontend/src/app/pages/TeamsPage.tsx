@@ -5,10 +5,10 @@ import { Button } from "../../teams/ui";
 import { useSession } from "../../session/SessionContext";
 import { PageHead } from "../AppShell";
 import { CreateTeamDrawer } from "../CreateTeamDrawer";
-
+//for new run 
 export function TeamsPage() {
   const { user } = useSession();
-  const { teams, loading, error, reload, applyRosterChange, addTeam } = useTeams();
+  const { teams, loading, error, reload, addTeam } = useTeams();
   const [creating, setCreating] = useState(false);
 
   return (
@@ -30,8 +30,7 @@ export function TeamsPage() {
         loading={loading}
         error={error}
         onRetry={reload}
-        onRosterChange={applyRosterChange}
-        currentUserId={user?.id}
+        basePath="#/app/teams"
       />
 
       {creating && user && (

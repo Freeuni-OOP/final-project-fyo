@@ -20,6 +20,7 @@ export interface AuthUser {
    *  flow (POST /api/onboarding — feature/onboarding-v2 until it merges)
    *  completes it; route users with onboarding=true there after auth. */
   onboarding: boolean;
+  admin: boolean;
 }
 
 /**
