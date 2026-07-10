@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { matchesApi, type Match } from "../api/matches";
 import { ApiError } from "../api/http";
 import { chatMatchPath } from "../chat/routes";
+import { useAuth } from "../hooks/useAuth";
 import { Avatar, Ball, Button } from "../teams/ui";
 
 interface MatchDetailProps {
   matchId: number;
-  actingUserId: number;
   onClose: () => void;
   onUpdated?: (match: Match) => void;
 }
@@ -31,7 +31,8 @@ function formatLabel(format: Match["format"]): string {
   return format === "ONE_VS_ONE" ? "One vs one" : "Team vs team";
 }
 
-export function MatchDetail({ matchId, actingUserId, onClose, onUpdated }: MatchDetailProps) {
+export function MatchDetail({ matchId, onClose, onUpdated }: MatchDetailProps) {
+  const { getIdToken } = useAuth();
   const [match, setMatch] = useState<Match | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -96,7 +97,9 @@ export function MatchDetail({ matchId, actingUserId, onClose, onUpdated }: Match
     setCancelling(true);
     setCancelError(null);
     try {
-      const updated = await matchesApi.cancel(matchId, actingUserId);
+      const token = await getIdToken();
+      if (!token) throw new ApiError(401, "Your session expired. Sign in again.");
+      const updated = await matchesApi.cancel(token, matchId);
       setMatch(updated);
       onUpdated?.(updated);
     } catch (err) {

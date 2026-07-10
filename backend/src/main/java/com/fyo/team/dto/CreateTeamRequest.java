@@ -15,7 +15,6 @@ public record CreateTeamRequest(
         String logoUrl,
         @NotNull @Min(1) @Max(100) Integer maxPlayers,
         Boolean isRecruiting,
-        @NotNull Long captainUserId,
         /** Players the captain adds up front. The captain's own id is ignored. */
         List<Long> memberUserIds
 ) {

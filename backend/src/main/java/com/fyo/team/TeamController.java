@@ -27,13 +27,19 @@ public class TeamController {
 
     /** Declared before `/{id}`, which would otherwise try to parse "mine" as an id. */
     @GetMapping("/mine")
-    public List<MyTeamResponse> getMyTeams(@RequestParam Long userId) {
-        return teamService.getTeamsForUser(userId);
+    public List<MyTeamResponse> getMyTeams(
+            @RequestHeader(value = "Authorization", required = false) String authorization
+    ) {
+        User currentUser = currentUserService.requireCurrentUser(authorization);
+        return teamService.getTeamsForUser(currentUser.getId());
     }
 
     @GetMapping("/my-requests")
-    public List<MyJoinRequestResponse> getMyJoinRequests(@RequestParam Long userId) {
-        return teamService.getJoinRequestsForUser(userId);
+    public List<MyJoinRequestResponse> getMyJoinRequests(
+            @RequestHeader(value = "Authorization", required = false) String authorization
+    ) {
+        User currentUser = currentUserService.requireCurrentUser(authorization);
+        return teamService.getJoinRequestsForUser(currentUser.getId());
     }
 
     @GetMapping("/{id}")
@@ -43,13 +49,21 @@ public class TeamController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public TeamDetailsResponse createTeam(@Valid @RequestBody CreateTeamRequest request) {
-        return teamService.createTeam(request);
+    public TeamDetailsResponse createTeam(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @Valid @RequestBody CreateTeamRequest request
+    ) {
+        User currentUser = currentUserService.requireCurrentUser(authorization);
+        return teamService.createTeam(request, currentUser.getId());
     }
 
     @PostMapping("/{id}/join")
-    public TeamDetailsResponse joinTeam(@PathVariable Long id, @Valid @RequestBody JoinTeamRequest request) {
-        return teamService.joinTeam(id, request);
+    public TeamDetailsResponse joinTeam(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable Long id
+    ) {
+        User currentUser = currentUserService.requireCurrentUser(authorization);
+        return teamService.joinTeam(id, currentUser.getId());
     }
 
     @PostMapping("/{id}/join-requests")
