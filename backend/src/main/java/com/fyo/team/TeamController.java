@@ -77,7 +77,11 @@ public class TeamController {
     }
 
     @GetMapping("/{id}/join-requests")
-    public List<JoinRequestResponse> getPendingJoinRequests(@PathVariable Long id) {
+    public List<JoinRequestResponse> getPendingJoinRequests(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable Long id
+    ) {
+        currentUserService.requireCurrentUser(authorization);
         return teamService.getPendingJoinRequests(id);
     }
 

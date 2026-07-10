@@ -4,6 +4,7 @@ import { chatApi } from "../chat/api";
 import { useAuth } from "../hooks/useAuth";
 import type { TeamDetails, JoinRequest } from "./types";
 import { Avatar, Ball, Button } from "./ui";
+import { useAuth } from "../hooks/useAuth";
 
 interface TeamDetailProps {
   teamId: number;
@@ -57,11 +58,13 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
   useEffect(() => {
     if (!team || !currentUserId || team.captain.id !== currentUserId) return;
     setLoadingRequests(true);
-    teamsApi
-      .getPendingRequests(teamId)
-      .then(setPendingRequests)
-      .catch(() => {})
-      .finally(() => setLoadingRequests(false));
+    getIdToken().then(token => {
+        if (!token) return;
+        teamsApi.getPendingRequests(teamId, token)
+          .then(setPendingRequests)
+          .catch(() => {})
+          .finally(() => setLoadingRequests(false));
+      });
   }, [team, teamId, currentUserId]);
 
   // Close on Escape; lock body scroll while the drawer is open.

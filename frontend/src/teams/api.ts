@@ -28,21 +28,19 @@ export const teamsApi = {
       method: "POST",
       token,
     }),
-  requestToJoin: (token: string, teamId: number) =>
+
+  requestToJoin: (teamId: number, token: string) =>
     request<JoinRequest>(`/api/teams/${teamId}/join-requests`, {
       method: "POST",
-      token,
-    }),
-  getPendingRequests: (teamId: number) =>
-    request<JoinRequest[]>(`/api/teams/${teamId}/join-requests`),
-  acceptRequest: (token: string, teamId: number, requestId: number) =>
+    }, token),
+  getPendingRequests: (teamId: number, token: string) =>
+    request<JoinRequest[]>(`/api/teams/${teamId}/join-requests`, undefined, token),
+  acceptRequest: (teamId: number, requestId: number, token: string) =>
     request<JoinRequest>(`/api/teams/${teamId}/join-requests/${requestId}/accept`, {
       method: "POST",
-      token,
-    }),
-  declineRequest: (token: string, teamId: number, requestId: number) =>
+    }, token),
+  declineRequest: (teamId: number, requestId: number, token: string) =>
     request<JoinRequest>(`/api/teams/${teamId}/join-requests/${requestId}/decline`, {
       method: "POST",
-      token,
-    }),
+    }, token),
 };
