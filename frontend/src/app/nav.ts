@@ -11,6 +11,7 @@ export const NAV: NavItem[] = [
   { label: "My teams", href: "#/app/my-teams" },
   { label: "Matches", href: "#/app/matches", soon: true },
   { label: "Profile", href: "#/app/profile", soon: true },
+  { label: "Admin", href: "#/app/admin" },
 ];
 
 export function isNavItemActive(item: NavItem, hash: string): boolean {
