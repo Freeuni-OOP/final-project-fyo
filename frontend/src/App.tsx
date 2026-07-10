@@ -15,6 +15,7 @@ import { SessionError } from "./app/SessionError";
 import { isRoot, matchesRoute, Redirect, routeId, routeParam, useHashRoute } from "./routing";
 import { useSession } from "./session/SessionContext";
 import { AdminPage } from "./app/pages/AdminPage";
+import { FriendsPage } from "./friends/FriendsPage";
 import Login from "./Login";
 import Signup from "./Signup";
 
@@ -22,9 +23,8 @@ import Signup from "./Signup";
 /**
  * Hash routes:
  *   public   #/  #/home  #/login  #/signup  #/teams  #/teams/:id
- *   signed in  #/app  #/app/teams  #/app/teams/:id  #/app/my-teams  #/onboarding
- *   public   #/  #/home  #/login  #/signup  #/teams
- *   signed in  #/app  #/app/teams  #/onboarding  #/chat
+ *   signed in  #/app  #/app/teams  #/app/teams/:id  #/app/my-teams  #/app/friends
+ *              #/app/profile  #/profile/:id  #/onboarding  #/chat
  *
  * Signed-in users are redirected off the public marketing pages and into the
  * platform shell. In-page anchors on the landing page (`#sports`, `#how`) are
@@ -49,6 +49,14 @@ export default function App() {
 
   if (matchesRoute(hash, "#/chat")) {
     return authed ? <ChatView /> : <Redirect to="#/login" />;
+  }
+
+  if (matchesRoute(hash, "#/profile")) {
+    const profileUserId = routeId(hash, "#/profile");
+    if (profileUserId === null) {
+      return authed ? <Redirect to="#/app/profile" /> : <Redirect to="#/login" />;
+    }
+    return authed ? <PublicProfilePage userId={profileUserId} /> : <Redirect to="#/login" />;
   }
 
   if (matchesRoute(hash, "#/login")) {
@@ -120,6 +128,22 @@ function AppRoutes({ hash }: { hash: string }) {
     return (
       <AppShell>
         <AdminPage />
+      </AppShell>
+    );
+  }
+
+  if (matchesRoute(hash, "#/app/friends")) {
+    return (
+      <AppShell>
+        <FriendsPage />
+      </AppShell>
+    );
+  }
+
+  if (matchesRoute(hash, "#/app/profile")) {
+    return (
+      <AppShell>
+        <ProfilePage />
       </AppShell>
     );
   }
