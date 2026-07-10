@@ -210,15 +210,20 @@ public class TeamService {
     }
 
     @Transactional
-    public JoinRequestResponse acceptJoinRequest(Long teamId, Long requestId) {
+    public JoinRequestResponse acceptJoinRequest(Long teamId, Long requestId, Long captainUserId) {
         JoinRequest joinRequest = joinRequestRepository.findByIdAndTeamId(requestId, teamId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Join request not found"));
+
+        Team team = joinRequest.getTeam();
+
+        if (!team.getCaptain().getId().equals(captainUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the captain can accept requests");
+        }
 
         if (joinRequest.getStatus() != JoinRequestStatus.PENDING) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request is not pending");
         }
 
-        Team team = joinRequest.getTeam();
         if (team.getOpenSpots() <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Team has no open spots");
         }
@@ -226,15 +231,18 @@ public class TeamService {
         joinRequest.accept();
         team.takeOpenSpot();
         teamMemberRepository.save(new TeamMember(team, joinRequest.getUser(), TeamMemberRole.MEMBER));
-        chatService.addUserToTeamConversation(team.getId(), joinRequest.getUser());
 
         return toJoinRequestResponse(joinRequest);
     }
 
     @Transactional
-    public JoinRequestResponse declineJoinRequest(Long teamId, Long requestId) {
+    public JoinRequestResponse declineJoinRequest(Long teamId, Long requestId, Long captainUserId) {
         JoinRequest joinRequest = joinRequestRepository.findByIdAndTeamId(requestId, teamId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Join request not found"));
+
+        if (!joinRequest.getTeam().getCaptain().getId().equals(captainUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the captain can decline requests");
+        }
 
         if (joinRequest.getStatus() != JoinRequestStatus.PENDING) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request is not pending");
