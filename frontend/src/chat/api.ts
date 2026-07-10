@@ -60,11 +60,23 @@ export const chatApi = {
       method: "POST",
     }),
 
-  messages: (token: string, conversationId: number) =>
-    request<ChatMessage[]>(
-      `/api/conversations/${conversationId}/messages`,
+  byMatch: (token: string, matchId: number) =>
+    request<Conversation>(`/api/conversations/by-match/${matchId}`, token),
+
+  messages: (
+    token: string,
+    conversationId: number,
+    options?: { before?: number; limit?: number }
+  ) => {
+    const params = new URLSearchParams();
+    if (options?.before != null) params.set("before", String(options.before));
+    if (options?.limit != null) params.set("limit", String(options.limit));
+    const query = params.toString();
+    return request<ChatMessage[]>(
+      `/api/conversations/${conversationId}/messages${query ? `?${query}` : ""}`,
       token
-    ),
+    );
+  },
 
   send: (token: string, conversationId: number, body: string) =>
     request<ChatMessage>(`/api/conversations/${conversationId}/messages`, token, {

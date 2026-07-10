@@ -144,6 +144,66 @@
   opacity: 0.6;
 }
 
+.court .chat__pill {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 2px 7px;
+  border: 1px solid var(--hair-strong);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.court .chat__pill--match {
+  border-color: var(--court);
+  color: var(--court);
+}
+
+.court .chat__pill--team {
+  border-color: var(--optic);
+  color: var(--ink-70);
+}
+
+.court .chat__pill--direct {
+  border-color: var(--hair-strong);
+  color: var(--ink-45);
+}
+
+.court .chat__socket-banner {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--optic);
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--ink-70);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+}
+
+.court .chat__load-more {
+  align-self: center;
+  margin-bottom: 4px;
+  padding: 8px 12px;
+  border: 1px solid var(--hair-strong);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--ink-70);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.court .chat__load-more:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
 .court .chat__idrow {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
