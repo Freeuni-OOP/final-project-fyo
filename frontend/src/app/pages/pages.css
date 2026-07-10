@@ -122,6 +122,79 @@
   }
 }
 
+/* ---------- join-request rows (my teams) ------------------------- */
+
+.court .reqlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--ink);
+}
+
+.court .req {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px 28px;
+  padding: clamp(16px, 2vw, 22px) 4px;
+  border-bottom: 1px solid var(--hair);
+}
+
+.court .req__team {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  text-decoration: none;
+}
+
+.court .req__sport {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--court);
+  transition: color 0.2s ease;
+}
+
+.court .req__team:hover .req__sport {
+  color: var(--optic);
+}
+
+.court .req__name {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.2rem, 2.4vw, 1.7rem);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+
+.court .req__meta {
+  font-size: 0.9rem;
+  color: var(--ink-45);
+}
+
+.court .req .badge {
+  margin-top: 0;
+  justify-self: end;
+}
+
+@media (max-width: 760px) {
+  .court .req {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .court .req__meta {
+    grid-column: 1 / -1;
+  }
+}
+
 /* ---------- forms (create-team drawer) --------------------------- */
 
 .court .form {
@@ -207,4 +280,131 @@
 /* The drawer's create form is a page, not a card: give it room to breathe. */
 .court .drawer__panel .form {
   padding-bottom: 8px;
+}
+
+/* ---------- player picker (create-team form) --------------------- */
+
+.court .form__hint {
+  margin-left: 10px;
+  text-transform: none;
+  letter-spacing: 0.06em;
+  color: var(--ink-45);
+  opacity: 0.75;
+}
+
+.court .picks {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.court .pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border: 1px solid var(--hair);
+  border-radius: 2px;
+  background: var(--chalk-2);
+}
+
+.court .pick__name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.court .pick__handle {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink-45);
+}
+
+.court .pick__remove {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--hair-strong);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--ink-70);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.court .pick__remove:hover {
+  background: var(--ink);
+  color: var(--chalk);
+}
+
+.court .picker {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  border: 1px solid var(--hair);
+  border-radius: 2px;
+  max-height: 232px;
+  overflow-y: auto;
+}
+
+.court .picker__opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-bottom: 1px solid var(--hair);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  transition: background 0.15s ease;
+}
+.court .picker li:last-child .picker__opt {
+  border-bottom: 0;
+}
+.court .picker__opt:hover,
+.court .picker__opt:focus-visible {
+  background: var(--chalk-2);
+}
+
+.court .picker__id {
+  flex: 1;
+  min-width: 0;
+}
+
+.court .picker__name {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.court .picker__handle {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink-45);
+}
+
+.court .picker__add {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--court);
+}
+.court .picker__opt:hover .picker__add {
+  color: var(--optic);
+}
+
+.court .picker__note {
+  margin: 8px 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--ink-45);
 }

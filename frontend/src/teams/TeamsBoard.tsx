@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import type { TeamDetails, TeamSummary } from "./types";
-import { TeamDetail } from "./TeamDetail";
+import type { TeamSummary } from "./types";
 import { useReveal } from "./useReveal";
 import { Button } from "./ui";
 
@@ -11,23 +10,15 @@ interface TeamsBoardProps {
   loading: boolean;
   error: string | null;
   onRetry: () => void;
-  onRosterChange: (team: TeamDetails) => void;
-  currentUserId?: number;
+  /** Team pages hang off this route: `#/teams` publicly, `#/app/teams` in the shell. */
+  basePath: string;
 }
 
-/** Sport/recruiting filters, the fixtures list, and the detail drawer.
- *  Shared by the public `#/teams` page and the in-shell `#/app/teams` page. */
-export function TeamsBoard({
-  teams,
-  loading,
-  error,
-  onRetry,
-  onRosterChange,
-  currentUserId,
-}: TeamsBoardProps) {
+/** Sport/recruiting filters and the fixtures list. Each row links to the team's
+ *  own page. Shared by the public `#/teams` page and the in-shell `#/app/teams`. */
+export function TeamsBoard({ teams, loading, error, onRetry, basePath }: TeamsBoardProps) {
   const [sport, setSport] = useState<string>("ALL");
   const [status, setStatus] = useState<Filter>("ALL");
-  const [openId, setOpenId] = useState<number | null>(null);
 
   const sports = useMemo(
     () => Array.from(new Set(teams.map((t) => t.sport.name))).sort(),
@@ -100,18 +91,9 @@ export function TeamsBoard({
             <span />
           </li>
           {visible.map((t, i) => (
-            <TeamRow key={t.id} team={t} index={i} onOpen={() => setOpenId(t.id)} />
+            <TeamRow key={t.id} team={t} index={i} href={`${basePath}/${t.id}`} />
           ))}
         </ul>
-      )}
-
-      {openId !== null && (
-        <TeamDetail
-          teamId={openId}
-          onClose={() => setOpenId(null)}
-          onJoined={onRosterChange}
-          currentUserId={currentUserId}
-        />
       )}
     </>
   );
@@ -120,53 +102,61 @@ export function TeamsBoard({
 interface TeamRowProps {
   team: TeamSummary;
   index: number;
-  onOpen: () => void;
+  /** The team's page. A real link, so middle-click and back both behave. */
+  href: string;
+  /** Extra label beside the sport, e.g. the viewer's role on this team. */
+  tag?: string;
 }
 
-/** One fixtures-style row. Also used by the dashboard's recruiting panel. */
-export function TeamRow({ team, index, onOpen }: TeamRowProps) {
+/** One fixtures-style row. Also used by the dashboard and the my-teams page. */
+export function TeamRow({ team, index, href, tag }: TeamRowProps) {
   const filled = team.maxPlayers - team.openSpots;
   const pct = Math.round((filled / team.maxPlayers) * 100);
 
   return (
-    <li
-      className="row"
-      data-reveal
-      onClick={onOpen}
-      style={{ transitionDelay: `${Math.min(index, 8) * 40}ms` }}
-    >
-      <div className="row__team">
-        <span className="row__no">{String(index + 1).padStart(2, "0")}</span>
-        <div className="row__team-id">
-          <span className="row__sport">{team.sport.name}</span>
-          <span className="row__name">{team.name}</span>
-          <span className="row__region">{team.region ?? "—"}</span>
+    <li className="rowitem">
+      <a
+        className="row"
+        href={href}
+        data-reveal
+        style={{ transitionDelay: `${Math.min(index, 8) * 40}ms` }}
+      >
+        <div className="row__team">
+          <span className="row__no">{String(index + 1).padStart(2, "0")}</span>
+          <div className="row__team-id">
+            <span className="row__sport">
+              {team.sport.name}
+              {tag && <em className="row__tag">{tag}</em>}
+            </span>
+            <span className="row__name">{team.name}</span>
+            <span className="row__region">{team.region ?? "—"}</span>
+          </div>
         </div>
-      </div>
 
-      <div className="row__captain">
-        <span className="row__captain-label">Captain</span>
-        {team.captain.name} {team.captain.surname}
-      </div>
+        <div className="row__captain">
+          <span className="row__captain-label">Captain</span>
+          {team.captain.name} {team.captain.surname}
+        </div>
 
-      <div className="row__spots">
-        <span className="meter__track">
-          <span className="meter__fill" style={{ width: `${pct}%` }} />
+        <div className="row__spots">
+          <span className="meter__track">
+            <span className="meter__fill" style={{ width: `${pct}%` }} />
+          </span>
+          <span className="row__spots-n">
+            {team.isRecruiting ? (
+              <>
+                <strong>{team.openSpots}</strong> open
+              </>
+            ) : (
+              "Full"
+            )}
+          </span>
+        </div>
+
+        <span className="row__go" aria-hidden="true">
+          View →
         </span>
-        <span className="row__spots-n">
-          {team.isRecruiting ? (
-            <>
-              <strong>{team.openSpots}</strong> open
-            </>
-          ) : (
-            "Full"
-          )}
-        </span>
-      </div>
-
-      <span className="row__go" aria-hidden="true">
-        View →
-      </span>
+      </a>
     </li>
   );
 }
