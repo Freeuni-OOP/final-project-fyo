@@ -83,18 +83,18 @@ function AppRoutes({ hash }: { hash: string }) {
     );
   }
 
-  if (hash === "#/app" || hash === "#/app/") {
-    return (
-      <AppShell>
-        <Dashboard />
-      </AppShell>
-    );
-  }
-  
   if (matchesRoute(hash, "#/app/admin")) {
     return (
       <AppShell>
         <AdminPage />
+      </AppShell>
+    );
+  }
+
+  if (hash === "#/app" || hash === "#/app/") {
+    return (
+      <AppShell>
+        <Dashboard />
       </AppShell>
     );
   }
