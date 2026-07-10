@@ -7,6 +7,7 @@ export interface NavItem {
 
 export const NAV: NavItem[] = [
   { label: "Dashboard", href: "#/app" },
+  { label: "Players", href: "#/app/players" },
   { label: "Teams", href: "#/app/teams" },
   { label: "My teams", href: "#/app/my-teams" },
   { label: "Friends", href: "#/app/friends" },

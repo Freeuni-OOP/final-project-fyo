@@ -8,6 +8,7 @@ import { ChatView } from "./chat/ChatView";
 import { AppShell } from "./app/AppShell";
 import { Dashboard } from "./app/pages/Dashboard";
 import { MyTeamsPage } from "./app/pages/MyTeamsPage";
+import { PlayersPage } from "./app/pages/PlayersPage";
 import { TeamPage } from "./app/pages/TeamPage";
 import { TeamsPage } from "./app/pages/TeamsPage";
 import { Splash } from "./app/Splash";
@@ -103,6 +104,13 @@ export default function App() {
 }
 
 function AppRoutes({ hash }: { hash: string }) {
+  if (matchesRoute(hash, "#/app/players")) {
+    return (
+      <AppShell>
+        <PlayersPage />
+      </AppShell>
+    );
+  }
   if (matchesRoute(hash, "#/app/my-teams")) {
     return (
       <AppShell>
