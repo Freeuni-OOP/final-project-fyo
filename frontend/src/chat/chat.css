@@ -136,6 +136,14 @@
   background: #b3261e;
 }
 
+.court .chat__badge {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
 .court .chat__idrow {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
