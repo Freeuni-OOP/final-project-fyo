@@ -16,7 +16,7 @@ export class MiniStompClient {
 
   constructor(private url: string, private onStatus: StatusHandler) {}
 
-  connect() {
+  connect(connectHeaders: Record<string, string> = {}) {
     if (this.socket && this.socket.readyState <= WebSocket.OPEN) return;
 
     this.onStatus("connecting");
@@ -26,6 +26,7 @@ export class MiniStompClient {
       this.sendFrame("CONNECT", {
         "accept-version": "1.2",
         "heart-beat": "0,0",
+        ...connectHeaders,
       });
     };
 
