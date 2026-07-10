@@ -133,4 +133,20 @@ Class AdminServiceTests() {
 
         assertThat(archived.archived()).isTrue();
     }
+
+    @Test
+    void adminCanCreateAndDeleteSport() {
+        User admin = getAdminUser();
+
+        SportAdminResponse created = adminService.createSport(
+                admin.getId(), new CreateSportRequest("TestSport123")
+        );
+
+        assertThat(created.sportName()).isEqualTo("TestSport123");
+
+        adminService.deleteSport(admin.getId(), created.id());
+
+        List<SportAdminResponse> sports = adminService.getSports(admin.getId());
+        assertThat(sports).noneMatch(s -> s.id().equals(created.id()));
+    }
 }
