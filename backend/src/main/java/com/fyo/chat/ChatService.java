@@ -7,12 +7,20 @@ import com.fyo.chat.dto.CreateDirectConversationRequest;
 import com.fyo.domain.ChatMessage;
 import com.fyo.domain.Conversation;
 import com.fyo.domain.ConversationParticipant;
+import com.fyo.domain.Match;
+import com.fyo.domain.MatchFormat;
+import com.fyo.domain.Team;
+import com.fyo.domain.TeamMember;
 import com.fyo.domain.User;
 import com.fyo.repository.ChatMessageRepository;
 import com.fyo.repository.ConversationParticipantRepository;
 import com.fyo.repository.ConversationRepository;
+import com.fyo.repository.TeamMemberRepository;
 import com.fyo.repository.UserRepository;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,17 +33,20 @@ public class ChatService {
     private final ConversationParticipantRepository participantRepository;
     private final ChatMessageRepository messageRepository;
     private final UserRepository userRepository;
+    private final TeamMemberRepository teamMemberRepository;
 
     public ChatService(
             ConversationRepository conversationRepository,
             ConversationParticipantRepository participantRepository,
             ChatMessageRepository messageRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            TeamMemberRepository teamMemberRepository
     ) {
         this.conversationRepository = conversationRepository;
         this.participantRepository = participantRepository;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
+        this.teamMemberRepository = teamMemberRepository;
     }
 
     @Transactional(readOnly = true)
@@ -91,6 +102,47 @@ public class ChatService {
         }
 
         return createConversation(currentUserId, request);
+    }
+
+    /**
+     * Creates the conversation for a freshly confirmed match, so both sides can
+     * agree on time, place, and rules. Idempotent per match (conversations.match_id
+     * is UNIQUE). ONE_VS_ONE gets the two players; TEAM_VS_TEAM gets every member
+     * of both rosters as a group chat.
+     *
+     * <p>Internal API — called by the match acceptance flow, never from a
+     * controller with client-supplied ids.
+     */
+    @Transactional
+    public ConversationResponse createMatchConversation(Match match) {
+        return conversationRepository.findByMatchId(match.getId())
+                .map(this::toConversationResponse)
+                .orElseGet(() -> {
+                    Conversation conversation = conversationRepository.save(new Conversation(match.getId()));
+                    for (User participant : matchParticipants(match)) {
+                        participantRepository.save(new ConversationParticipant(conversation, participant));
+                    }
+                    return toConversationResponse(conversation);
+                });
+    }
+
+    private Collection<User> matchParticipants(Match match) {
+        // Keyed by user id so a player on both rosters is added only once.
+        Map<Long, User> participants = new LinkedHashMap<>();
+        if (match.getFormat() == MatchFormat.ONE_VS_ONE) {
+            participants.put(match.getHomeUser().getId(), match.getHomeUser());
+            participants.put(match.getAwayUser().getId(), match.getAwayUser());
+        } else {
+            addRoster(participants, match.getHomeTeam());
+            addRoster(participants, match.getAwayTeam());
+        }
+        return participants.values();
+    }
+
+    private void addRoster(Map<Long, User> participants, Team team) {
+        for (TeamMember member : teamMemberRepository.findByTeamId(team.getId())) {
+            participants.put(member.getUser().getId(), member.getUser());
+        }
     }
 
     private ConversationResponse createConversation(Long currentUserId, CreateDirectConversationRequest request) {
