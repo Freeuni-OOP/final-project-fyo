@@ -70,7 +70,7 @@ export function TeamDetailPage({ teamId, backHref, currentUserId }: TeamDetailPa
 
   async function handleAccept(requestId: number) {
     try {
-      await teamsApi.acceptRequest(teamId, requestId);
+      await teamsApi.acceptRequest(teamId, requestId, currentUserId!);
       setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
       setTeam(await teamsApi.get(teamId));
     } catch (err) {
@@ -80,7 +80,7 @@ export function TeamDetailPage({ teamId, backHref, currentUserId }: TeamDetailPa
 
   async function handleDecline(requestId: number) {
     try {
-      await teamsApi.declineRequest(teamId, requestId);
+      await teamsApi.declineRequest(teamId, requestId, currentUserId!);
       setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
     } catch (err) {
       alert((err as ApiError).message);
