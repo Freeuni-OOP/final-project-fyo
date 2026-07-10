@@ -4,6 +4,7 @@ import { ProfilePage } from "./profile/ProfilePage";
 import { PublicProfilePage } from "./profile/PublicProfilePage";
 import { PublicTeamPage } from "./teams/PublicTeamPage";
 import { TeamsView } from "./teams/TeamsView";
+import { ChatView } from "./chat/ChatView";
 import { AppShell } from "./app/AppShell";
 import { Dashboard } from "./app/pages/Dashboard";
 import { MyTeamsPage } from "./app/pages/MyTeamsPage";
@@ -20,6 +21,8 @@ import Signup from "./Signup";
  * Hash routes:
  *   public   #/  #/home  #/login  #/signup  #/teams  #/teams/:id
  *   signed in  #/app  #/app/teams  #/app/teams/:id  #/app/my-teams  #/onboarding
+ *   public   #/  #/home  #/login  #/signup  #/teams
+ *   signed in  #/app  #/app/teams  #/onboarding  #/chat
  *
  * Signed-in users are redirected off the public marketing pages and into the
  * platform shell. In-page anchors on the landing page (`#sports`, `#how`) are
@@ -42,12 +45,18 @@ export default function App() {
     return <Redirect to="#/onboarding" />;
   }
 
+  if (matchesRoute(hash, "#/chat")) {
+    return authed ? <ChatView /> : <Redirect to="#/login" />;
+  }
+
   if (matchesRoute(hash, "#/login")) {
-    return authed ? <Redirect to="#/app" /> : <Login />;
+    if (!authed) return <Login />;
+    return <Redirect to={user.onboarding ? "#/onboarding" : "#/app"} />;
   }
 
   if (matchesRoute(hash, "#/signup")) {
-    return authed ? <Redirect to="#/app" /> : <Signup />;
+    if (!authed) return <Signup />;
+    return <Redirect to={user.onboarding ? "#/onboarding" : "#/app"} />;
   }
 
   if (matchesRoute(hash, "#/onboarding")) {
