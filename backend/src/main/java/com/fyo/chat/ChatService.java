@@ -89,19 +89,52 @@ public class ChatService {
         return toMessageResponse(saved);
     }
 
+    /** Creates (or returns the existing) 1:1 thread between the caller and another user. */
     @Transactional
     public ConversationResponse createDirectConversation(Long currentUserId, CreateDirectConversationRequest request) {
         if (currentUserId.equals(request.otherUserId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Conversation needs two different users");
         }
 
-        if (request.matchId() != null) {
-            return conversationRepository.findByMatchId(request.matchId())
-                    .map(this::toConversationResponse)
-                    .orElseGet(() -> createConversation(currentUserId, request));
+        return conversationRepository.findDirectBetween(currentUserId, request.otherUserId())
+                .map(this::toConversationResponse)
+                .orElseGet(() -> createDirect(currentUserId, request.otherUserId()));
+    }
+
+    /**
+     * Creates (or returns the existing) group chat for a team roster. Only
+     * members of the team may open it; every current member joins as a
+     * participant. Idempotent per team (conversations.team_id is UNIQUE).
+     */
+    @Transactional
+    public ConversationResponse createTeamConversation(Long currentUserId, Long teamId) {
+        if (!teamMemberRepository.existsByTeamIdAndUserId(teamId, currentUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only team members can open the team chat");
         }
 
-        return createConversation(currentUserId, request);
+        return conversationRepository.findByTeamId(teamId)
+                .map(this::toConversationResponse)
+                .orElseGet(() -> {
+                    Conversation conversation = conversationRepository.save(Conversation.forTeam(teamId));
+                    for (TeamMember member : teamMemberRepository.findByTeamId(teamId)) {
+                        participantRepository.save(new ConversationParticipant(conversation, member.getUser()));
+                    }
+                    return toConversationResponse(conversation);
+                });
+    }
+
+    /**
+     * Keeps the team chat in sync with the roster: called when a user joins a
+     * team, so an existing team conversation picks them up. No-op when the
+     * team has no chat yet or the user is already in it.
+     */
+    @Transactional
+    public void addUserToTeamConversation(Long teamId, User user) {
+        conversationRepository.findByTeamId(teamId).ifPresent(conversation -> {
+            if (!participantRepository.existsByConversationIdAndUserId(conversation.getId(), user.getId())) {
+                participantRepository.save(new ConversationParticipant(conversation, user));
+            }
+        });
     }
 
     /**
@@ -118,7 +151,7 @@ public class ChatService {
         return conversationRepository.findByMatchId(match.getId())
                 .map(this::toConversationResponse)
                 .orElseGet(() -> {
-                    Conversation conversation = conversationRepository.save(new Conversation(match.getId()));
+                    Conversation conversation = conversationRepository.save(Conversation.forMatch(match.getId()));
                     for (User participant : matchParticipants(match)) {
                         participantRepository.save(new ConversationParticipant(conversation, participant));
                     }
@@ -145,13 +178,13 @@ public class ChatService {
         }
     }
 
-    private ConversationResponse createConversation(Long currentUserId, CreateDirectConversationRequest request) {
+    private ConversationResponse createDirect(Long currentUserId, Long otherUserId) {
         User currentUser = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Current user not found"));
-        User otherUser = userRepository.findById(request.otherUserId())
+        User otherUser = userRepository.findById(otherUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Other user not found"));
 
-        Conversation conversation = conversationRepository.save(new Conversation(request.matchId()));
+        Conversation conversation = conversationRepository.save(Conversation.direct());
         participantRepository.save(new ConversationParticipant(conversation, currentUser));
         participantRepository.save(new ConversationParticipant(conversation, otherUser));
 
@@ -187,7 +220,9 @@ public class ChatService {
 
         return new ConversationResponse(
                 conversation.getId(),
+                conversation.getType(),
                 conversation.getMatchId(),
+                conversation.getTeamId(),
                 participants,
                 lastMessage,
                 conversation.getCreatedAt()

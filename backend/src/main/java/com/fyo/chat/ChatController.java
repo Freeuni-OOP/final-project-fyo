@@ -52,6 +52,17 @@ public class ChatController {
         return chatService.createDirectConversation(currentUser.getId(), request);
     }
 
+    /** Opens (or returns) the group chat for a team. Caller must be a member. */
+    @PostMapping("/team/{teamId}")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ConversationResponse createTeamConversation(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable Long teamId
+    ) {
+        User currentUser = currentUserService.requireCurrentUser(authorization);
+        return chatService.createTeamConversation(currentUser.getId(), teamId);
+    }
+
     @GetMapping("/{conversationId}/messages")
     public List<ChatMessageResponse> getMessages(
             @RequestHeader(value = "Authorization", required = false) String authorization,
