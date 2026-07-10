@@ -47,12 +47,17 @@ export function TeamDetailPage({ teamId, backHref, currentUserId }: TeamDetailPa
 
   useEffect(() => {
     if (!team || !currentUserId || team.captain.id !== currentUserId) return;
+    let alive = true;
     setLoadingRequests(true);
     teamsApi
       .getPendingRequests(teamId)
-      .then(setPendingRequests)
+      .then((t) => alive && setPendingRequests(t))
       .catch(() => {})
-      .finally(() => setLoadingRequests(false));
+      .finally(() => alive && setLoadingRequests(false));
+
+    return () => {
+      alive = false;
+    };
   }, [team, teamId, currentUserId]);
 
   useEffect(() => {
