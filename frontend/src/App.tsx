@@ -45,11 +45,13 @@ export default function App() {
   }
 
   if (matchesRoute(hash, "#/login")) {
-    return authed ? <Redirect to="#/app" /> : <Login />;
+    if (!authed) return <Login />;
+    return <Redirect to={user.onboarding ? "#/onboarding" : "#/app"} />;
   }
 
   if (matchesRoute(hash, "#/signup")) {
-    return authed ? <Redirect to="#/app" /> : <Signup />;
+    if (!authed) return <Signup />;
+    return <Redirect to={user.onboarding ? "#/onboarding" : "#/app"} />;
   }
 
   if (matchesRoute(hash, "#/onboarding")) {
