@@ -1,0 +1,139 @@
+/* Player finder — card grid. Reuses .court theme tokens and the .chips /
+   .teams__controls / .teams__state atoms already defined in teams.css. */
+
+.court .playercards {
+  list-style: none;
+  margin: 24px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+
+.court .playercard-item {
+  display: block;
+}
+
+.court .playercard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  height: 100%;
+  padding: 18px;
+  border: 1px solid var(--hair);
+  border-radius: 2px;
+  background: var(--chalk);
+  transition: border-color 0.18s ease, transform 0.18s ease;
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.court .playercard.is-in,
+.court [data-reveal].is-in.playercard {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.court .playercard:hover {
+  border-color: var(--hair-strong);
+  transform: translateY(-2px);
+}
+
+.court .playercard__top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.court .playercard__id {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.court .playercard__name {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.court .playercard__handle {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--ink-45);
+}
+
+.court .playercard__meta {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-45);
+}
+
+.court .playercard__sports {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.court .playercard__sport {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: var(--ink-70);
+}
+
+.court .skillpill {
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--hair-strong);
+  color: var(--ink-70);
+  white-space: nowrap;
+}
+
+.court .skillpill--beginner {
+  border-color: var(--hair-strong);
+  color: var(--ink-45);
+}
+
+.court .skillpill--intermediate {
+  border-color: var(--court);
+  color: var(--court);
+}
+
+.court .skillpill--advanced {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--chalk);
+}
+
+.court .playercard__go {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--hair);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-45);
+  transition: color 0.18s ease;
+}
+
+.court .playercard:hover .playercard__go {
+  color: var(--court);
+}
