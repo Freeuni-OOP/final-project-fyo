@@ -4,7 +4,6 @@ import com.fyo.chat.dto.ChatMessageResponse;
 import com.fyo.chat.dto.ConversationParticipantResponse;
 import com.fyo.chat.dto.ConversationResponse;
 import com.fyo.chat.dto.CreateDirectConversationRequest;
-import com.fyo.chat.dto.SendChatMessageRequest;
 import com.fyo.domain.ChatMessage;
 import com.fyo.domain.Conversation;
 import com.fyo.domain.ConversationParticipant;
@@ -58,14 +57,19 @@ public class ChatService {
                 .toList();
     }
 
+    /**
+     * Persists a message from {@code senderUserId}, which the caller must have
+     * resolved from a trusted source (Bearer token on REST; socket principal
+     * once WebSocket auth lands).
+     */
     @Transactional
-    public ChatMessageResponse sendMessage(Long conversationId, SendChatMessageRequest request) {
+    public ChatMessageResponse sendMessage(Long conversationId, Long senderUserId, String rawBody) {
         Conversation conversation = ensureConversationExists(conversationId);
-        User sender = userRepository.findById(request.senderUserId())
+        User sender = userRepository.findById(senderUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sender user not found"));
         ensureParticipant(conversationId, sender.getId());
 
-        String body = request.body().trim();
+        String body = rawBody == null ? "" : rawBody.trim();
         if (body.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Message body cannot be blank");
         }
@@ -75,29 +79,29 @@ public class ChatService {
     }
 
     @Transactional
-    public ConversationResponse createDirectConversation(CreateDirectConversationRequest request) {
-        if (request.userAId().equals(request.userBId())) {
+    public ConversationResponse createDirectConversation(Long currentUserId, CreateDirectConversationRequest request) {
+        if (currentUserId.equals(request.otherUserId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Conversation needs two different users");
         }
 
         if (request.matchId() != null) {
             return conversationRepository.findByMatchId(request.matchId())
                     .map(this::toConversationResponse)
-                    .orElseGet(() -> createConversation(request));
+                    .orElseGet(() -> createConversation(currentUserId, request));
         }
 
-        return createConversation(request);
+        return createConversation(currentUserId, request);
     }
 
-    private ConversationResponse createConversation(CreateDirectConversationRequest request) {
-        User userA = userRepository.findById(request.userAId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "First user not found"));
-        User userB = userRepository.findById(request.userBId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Second user not found"));
+    private ConversationResponse createConversation(Long currentUserId, CreateDirectConversationRequest request) {
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Current user not found"));
+        User otherUser = userRepository.findById(request.otherUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Other user not found"));
 
         Conversation conversation = conversationRepository.save(new Conversation(request.matchId()));
-        participantRepository.save(new ConversationParticipant(conversation, userA));
-        participantRepository.save(new ConversationParticipant(conversation, userB));
+        participantRepository.save(new ConversationParticipant(conversation, currentUser));
+        participantRepository.save(new ConversationParticipant(conversation, otherUser));
 
         return toConversationResponse(conversation);
     }
