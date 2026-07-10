@@ -12,9 +12,12 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`${BASE}${path}`, {
-      headers: { "Content-Type": "application/json" },
-      ...init,
-    });
+      headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        ...init,
+      });
   } catch {
     throw new ApiError(0, "Can't reach the server. Is the backend running?");
   }

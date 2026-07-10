@@ -1,5 +1,7 @@
 package com.fyo.team;
 
+import com.fyo.auth.CurrentUserService;
+import com.fyo.domain.User;
 import com.fyo.team.dto.*;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -11,9 +13,11 @@ import org.springframework.web.bind.annotation.*;
 public class TeamController {
 
     private final TeamService teamService;
+    private final CurrentUserService currentUserService;
 
-    public TeamController(TeamService teamService) {
+    public TeamController(TeamService teamService, CurrentUserService currentUserService) {
         this.teamService = teamService;
+        this.currentUserService = currentUserService;
     }
 
     @GetMapping
@@ -39,30 +43,40 @@ public class TeamController {
 
     @PostMapping("/{id}/join-requests")
     @ResponseStatus(HttpStatus.CREATED)
-    public JoinRequestResponse requestToJoin(@PathVariable Long id, @RequestParam Long userId) {
-        return teamService.requestToJoin(id, userId);
+    public JoinRequestResponse requestToJoin(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable Long id
+    ) {
+        User currentUser = currentUserService.requireCurrentUser(authorization);
+        return teamService.requestToJoin(id, currentUser.getId());
     }
 
     @GetMapping("/{id}/join-requests")
-    public List<JoinRequestResponse> getPendingJoinRequests(@PathVariable Long id) {
+    public List<JoinRequestResponse> getPendingJoinRequests(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable Long id
+    ) {
+        currentUserService.requireCurrentUser(authorization);
         return teamService.getPendingJoinRequests(id);
     }
 
     @PostMapping("/{id}/join-requests/{requestId}/accept")
     public JoinRequestResponse acceptJoinRequest(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
             @PathVariable Long id,
-            @PathVariable Long requestId,
-            @RequestParam Long actingUserId
+            @PathVariable Long requestId
     ) {
-        return teamService.acceptJoinRequest(id, requestId, actingUserId);
+        User currentUser = currentUserService.requireCurrentUser(authorization);
+        return teamService.acceptJoinRequest(id, requestId, currentUser.getId());
     }
 
     @PostMapping("/{id}/join-requests/{requestId}/decline")
     public JoinRequestResponse declineJoinRequest(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
             @PathVariable Long id,
-            @PathVariable Long requestId,
-            @RequestParam Long actingUserId
+            @PathVariable Long requestId
     ) {
-        return teamService.declineJoinRequest(id, requestId, actingUserId);
+        User currentUser = currentUserService.requireCurrentUser(authorization);
+        return teamService.declineJoinRequest(id, requestId, currentUser.getId());
     }
 }

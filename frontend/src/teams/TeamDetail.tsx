@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ApiError, teamsApi } from "./api";
 import type { TeamDetails, JoinRequest } from "./types";
 import { Avatar, Ball, Button } from "./ui";
+import { useAuth } from "../hooks/useAuth";
 
 interface TeamDetailProps {
   teamId: number;
@@ -55,11 +56,13 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
   useEffect(() => {
     if (!team || !currentUserId || team.captain.id !== currentUserId) return;
     setLoadingRequests(true);
-    teamsApi
-      .getPendingRequests(teamId)
-      .then(setPendingRequests)
-      .catch(() => {})
-      .finally(() => setLoadingRequests(false));
+    getIdToken().then(token => {
+        if (!token) return;
+        teamsApi.getPendingRequests(teamId, token)
+          .then(setPendingRequests)
+          .catch(() => {})
+          .finally(() => setLoadingRequests(false));
+      });
   }, [team, teamId, currentUserId]);
 
   // Close on Escape; lock body scroll while the drawer is open.
@@ -84,6 +87,8 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
     setRequesting(true);
     setRequestError(null);
     try {
+      const token = await getIdToken();
+      if (!token) throw new Error("You must be signed in to request to join.");
       await teamsApi.requestToJoin(teamId, id);
       setRequested(true);
       setRequestOpen(false);
@@ -97,7 +102,9 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
 
   async function handleAccept(requestId: number) {
     try {
-      await teamsApi.acceptRequest(teamId, requestId);
+      const token = await getIdToken();
+      if (!token) return;
+      await teamsApi.acceptRequest(teamId, requestId, token);
       setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
       const updated = await teamsApi.get(teamId);
       setTeam(updated);
@@ -109,7 +116,9 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
 
   async function handleDecline(requestId: number) {
     try {
-      await teamsApi.declineRequest(teamId, requestId);
+      const token = await getIdToken();
+      if (!token) return;
+      await teamsApi.declineRequest(teamId, requestId, token);
       setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
     } catch (err) {
       alert((err as ApiError).message);
