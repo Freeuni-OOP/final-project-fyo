@@ -16,6 +16,7 @@ import { isRoot, matchesRoute, Redirect, routeId, routeParam, useHashRoute } fro
 import { useSession } from "./session/SessionContext";
 import { AdminPage } from "./app/pages/AdminPage";
 import { FriendsPage } from "./friends/FriendsPage";
+import { MatchesPage } from "./app/pages/MatchesPage";
 import Login from "./Login";
 import Signup from "./Signup";
 
@@ -24,7 +25,7 @@ import Signup from "./Signup";
  * Hash routes:
  *   public   #/  #/home  #/login  #/signup  #/teams  #/teams/:id
  *   signed in  #/app  #/app/teams  #/app/teams/:id  #/app/my-teams  #/app/friends
- *              #/app/profile  #/profile/:id  #/onboarding  #/chat
+ *              #/app/matches  #/app/profile  #/profile/:id  #/onboarding  #/chat
  *
  * Signed-in users are redirected off the public marketing pages and into the
  * platform shell. In-page anchors on the landing page (`#sports`, `#how`) are
@@ -45,6 +46,10 @@ export default function App() {
   // A half-set-up account can't use anything else.
   if (authed && user.onboarding && !matchesRoute(hash, "#/onboarding")) {
     return <Redirect to="#/onboarding" />;
+  }
+
+  if (matchesRoute(hash, "#/matches")) {
+    if (authed) return <Redirect to="#/app/matches" />;
   }
 
   if (matchesRoute(hash, "#/chat")) {
@@ -136,6 +141,14 @@ function AppRoutes({ hash }: { hash: string }) {
     return (
       <AppShell>
         <FriendsPage />
+      </AppShell>
+    );
+  }
+
+  if (matchesRoute(hash, "#/app/matches")) {
+    return (
+      <AppShell>
+        <MatchesPage />
       </AppShell>
     );
   }

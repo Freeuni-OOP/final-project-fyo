@@ -32,6 +32,13 @@ export interface Match {
 }
 
 export const matchesApi = {
+  list: (params?: { userId?: number; teamId?: number }) => {
+    const q = new URLSearchParams();
+    if (params?.userId != null) q.set("userId", String(params.userId));
+    if (params?.teamId != null) q.set("teamId", String(params.teamId));
+    const qs = q.toString();
+    return request<Match[]>(`/api/matches${qs ? `?${qs}` : ""}`);
+  },
   listForUser: (userId: number) => request<Match[]>(`/api/matches?userId=${userId}`),
   get: (id: number) => request<Match>(`/api/matches/${id}`),
   cancel: (id: number, actingUserId: number) =>

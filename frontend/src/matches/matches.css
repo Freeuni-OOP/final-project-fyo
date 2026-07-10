@@ -1,0 +1,202 @@
+/* Small extras on top of teams styles (reused under .court). */
+
+.court .match-row__vs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25em;
+}
+
+.court .match-row__sep {
+  font-family: var(--font-mono);
+  font-size: 0.75em;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-45);
+}
+
+.court .match-detail__title {
+  font-size: clamp(1.4rem, 3vw, 1.85rem);
+  line-height: 1.15;
+}
+
+.court .match-status {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.court .match-status--upcoming {
+  color: var(--court);
+}
+
+.court .match-status--completed {
+  color: var(--ink-70);
+}
+
+.court .match-status--cancelled {
+  color: #a33;
+}
+
+.court .badge.match-status--upcoming {
+  background: rgba(27, 67, 192, 0.1);
+  border-color: rgba(27, 67, 192, 0.35);
+  color: var(--court);
+}
+
+.court .badge.match-status--completed {
+  background: rgba(20, 20, 15, 0.06);
+}
+
+.court .badge.match-status--cancelled {
+  background: rgba(170, 51, 51, 0.1);
+  border-color: rgba(170, 51, 51, 0.35);
+  color: #a33;
+}
+
+.court .matches-page__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 24px;
+}
+
+.court .matches-page__tab {
+  padding: 10px 16px;
+  border: 1px solid var(--hair-strong);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--ink-70);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.court .matches-page__tab--on {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.court .listing-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--hair);
+}
+
+.court .listing-card__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.court .listing-card__meta {
+  margin: 0;
+  color: var(--ink-45);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.court .listing-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.court .listing-responses {
+  margin: 8px 0 0;
+  padding: 12px;
+  border: 1px solid var(--hair-strong);
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.court .listing-responses__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--hair);
+}
+
+.court .listing-responses__row:last-child {
+  border-bottom: 0;
+}
+
+.court .listing-form {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 28px;
+  padding: 16px;
+  border: 1px solid var(--hair-strong);
+  border-radius: 2px;
+}
+
+.court .listing-form label {
+  display: grid;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-70);
+}
+
+.court .listing-form input,
+.court .listing-form select {
+  padding: 10px 12px;
+  border: 1px solid var(--hair-strong);
+  border-radius: 2px;
+  font: inherit;
+}
+
+.court .listing-form__row {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.court .match-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.court .match-filters select {
+  padding: 8px 12px;
+  border: 1px solid var(--hair-strong);
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.court .match-row {
+  display: grid;
+  gap: 6px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--hair);
+  cursor: pointer;
+}
+
+.court .match-row:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.court .match-row__sport {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-45);
+}
