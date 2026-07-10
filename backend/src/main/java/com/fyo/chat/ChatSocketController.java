@@ -1,19 +1,17 @@
 package com.fyo.chat;
 
+import com.fyo.auth.AuthenticatedUserPrincipal;
 import com.fyo.chat.dto.ChatMessageResponse;
 import com.fyo.chat.dto.SocketChatMessagePayload;
+import java.security.Principal;
+import org.springframework.http.HttpStatus;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.server.ResponseStatusException;
 
-/**
- * STOMP entry point for chat. NOTE: the handshake is not authenticated yet,
- * so the sender id in the payload is still client-asserted. A CONNECT
- * interceptor (planned) will replace it with a session principal; the REST
- * endpoints are the trusted path until then.
- */
 @Controller
 public class ChatSocketController {
 
@@ -28,10 +26,18 @@ public class ChatSocketController {
     @MessageMapping("/conversations/{conversationId}/send")
     public void sendMessage(
             @DestinationVariable Long conversationId,
-            @Payload SocketChatMessagePayload payload
+            @Payload SocketChatMessagePayload payload,
+            Principal principal
     ) {
-        ChatMessageResponse saved = chatService.sendMessage(
-                conversationId, payload.senderUserId(), payload.body());
+        Long senderUserId = requireUserId(principal);
+        ChatMessageResponse saved = chatService.sendMessage(conversationId, senderUserId, payload.body());
         messagingTemplate.convertAndSend("/topic/conversations/" + conversationId, saved);
+    }
+
+    private static Long requireUserId(Principal principal) {
+        if (principal instanceof AuthenticatedUserPrincipal authenticated) {
+            return authenticated.userId();
+        }
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "STOMP session is not authenticated");
     }
 }
