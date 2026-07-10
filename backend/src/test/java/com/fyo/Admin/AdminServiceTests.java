@@ -3,9 +3,18 @@ package com.fyo.admin;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.fyo.admin.dto.CreateSportRequest;
+import com.fyo.admin.dto.SportAdminResponse;
+import com.fyo.admin.dto.TeamAdminResponse;
+import com.fyo.admin.dto.UserAdminResponse;
 import com.fyo.domain.User;
 import com.fyo.repository.UserRepository;
+import java.util.List;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @SpringBootTest
 @Transactional
@@ -82,5 +91,46 @@ Class AdminServiceTests() {
         List<SportAdminResponse> sports = adminService.getSports(admin.getId());
 
         assertThat(sports).isNotEmpty();
+    }
+
+    @Test
+    void adminCanArchiveUser() {
+        User admin = getAdminUser();
+        User target = getNonAdminUser();
+
+        UserAdminResponse archived = adminService.archiveUser(admin.getId(), target.getId());
+
+        assertThat(archived.archived()).isTrue();
+        assertThat(archived.archivedAt()).isNotNull();
+    }
+
+    @Test
+    void archivingAlreadyArchivedUserThrows() {
+        User admin = getAdminUser();
+        User target = getNonAdminUser();
+
+        adminService.archiveUser(admin.getId(), target.getId());
+
+        assertThatThrownBy(() -> adminService.archiveUser(admin.getId(), target.getId()))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("User is already archived");
+    }
+
+    @Test
+    void adminCanArchiveTeam() {
+        User admin = getAdminUser();
+
+        List<TeamAdminResponse> teams = adminService.getTeams(admin.getId());
+        if (teams.isEmpty()) return;
+
+        TeamAdminResponse target = teams.stream()
+                .filter(t -> !t.archived())
+                .findFirst()
+                .orElse(null);
+        if (target == null) return;
+
+        TeamAdminResponse archived = adminService.archiveTeam(admin.getId(), target.id());
+
+        assertThat(archived.archived()).isTrue();
     }
 }
