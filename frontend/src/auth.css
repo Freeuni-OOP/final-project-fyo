@@ -64,3 +64,29 @@
 .court .auth__alt a {
   text-decoration: underline;
 }
+
+.court .auth__password {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.court .auth__password input {
+  width: 100%;
+  padding-right: 42px;
+}
+
+.court .auth__toggle {
+  position: absolute;
+  right: 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0;
+  color: var(--ink-70);
+}
+
+.court .auth__toggle:hover {
+  color: var(--ink);
+}
