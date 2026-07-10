@@ -7,7 +7,10 @@ import com.fyo.chat.dto.ChatMessageResponse;
 import com.fyo.chat.dto.ConversationResponse;
 import com.fyo.chat.dto.CreateDirectConversationRequest;
 import com.fyo.domain.ConversationType;
+import com.fyo.domain.Match;
 import com.fyo.domain.Sport;
+import com.fyo.repository.MatchRepository;
+import java.time.OffsetDateTime;
 import com.fyo.domain.Team;
 import com.fyo.domain.TeamMember;
 import com.fyo.domain.TeamMemberRole;
@@ -41,6 +44,9 @@ class ChatServiceTests {
 
     @Autowired
     private TeamMemberRepository teamMemberRepository;
+
+    @Autowired
+    private MatchRepository matchRepository;
 
     @Test
     void createDirectConversationAddsBothParticipants() {
@@ -130,7 +136,7 @@ class ChatServiceTests {
         // Second call must not duplicate the participant row.
         chatService.addUserToTeamConversation(team.getId(), newcomer);
 
-        assertThat(chatService.getMessages(conversation.id(), newcomer.getId())).isEmpty();
+        assertThat(chatService.getMessages(conversation.id(), newcomer.getId(), null, 50)).isEmpty();
     }
 
     @Test
@@ -163,7 +169,7 @@ class ChatServiceTests {
         assertThat(sent.body()).isEqualTo("hello from chat");
         // The thread may be a reused existing conversation with prior history,
         // so assert on the newest message rather than the whole list.
-        assertThat(chatService.getMessages(conversation.id(), receiver.getId()))
+        assertThat(chatService.getMessages(conversation.id(), receiver.getId(), null, 50))
                 .extracting(message -> message.body())
                 .endsWith("hello from chat");
     }
@@ -196,7 +202,7 @@ class ChatServiceTests {
                 new CreateDirectConversationRequest(userB.getId())
         );
 
-        assertThatThrownBy(() -> chatService.getMessages(conversation.id(), outsider.getId()))
+        assertThatThrownBy(() -> chatService.getMessages(conversation.id(), outsider.getId(), null, 50))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("User is not a conversation participant");
     }
@@ -214,5 +220,49 @@ class ChatServiceTests {
         assertThatThrownBy(() -> chatService.sendMessage(conversation.id(), userA.getId(), "   "))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Message body cannot be blank");
+    }
+
+    @Test
+    void getMessagesPaginatesOlderMessages() {
+        List<User> users = userRepository.findAll();
+        User userA = users.get(0);
+        User userB = users.get(1);
+        ConversationResponse conversation = chatService.createDirectConversation(
+                userA.getId(),
+                new CreateDirectConversationRequest(userB.getId())
+        );
+
+        for (int i = 1; i <= 3; i++) {
+            chatService.sendMessage(conversation.id(), userA.getId(), "msg-" + i);
+        }
+
+        List<ChatMessageResponse> latestPage = chatService.getMessages(conversation.id(), userA.getId(), null, 2);
+        assertThat(latestPage).extracting(ChatMessageResponse::body).endsWith("msg-2", "msg-3");
+
+        Long beforeId = latestPage.get(0).id();
+        List<ChatMessageResponse> olderPage = chatService.getMessages(
+                conversation.id(), userA.getId(), beforeId, 10);
+        assertThat(olderPage).extracting(ChatMessageResponse::body).contains("msg-1");
+        assertThat(olderPage).extracting(ChatMessageResponse::body).doesNotContain("msg-3");
+    }
+
+    @Test
+    void getConversationByMatchRequiresParticipant() {
+        List<User> users = userRepository.findAll();
+        User userA = users.get(0);
+        User userB = users.get(1);
+        User outsider = users.get(2);
+
+        Sport sport = sportRepository.findAll().get(0);
+        Match match = matchRepository.save(Match.oneVsOne(
+                sport, userA, userB, "Court A", OffsetDateTime.now()));
+        ConversationResponse conversation = chatService.createMatchConversation(match);
+
+        assertThat(chatService.getConversationByMatch(match.getId(), userA.getId()).id())
+                .isEqualTo(conversation.id());
+
+        assertThatThrownBy(() -> chatService.getConversationByMatch(match.getId(), outsider.getId()))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("User is not a conversation participant");
     }
 }

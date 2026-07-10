@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -63,13 +64,24 @@ public class ChatController {
         return chatService.createTeamConversation(currentUser.getId(), teamId);
     }
 
+    @GetMapping("/by-match/{matchId}")
+    public ConversationResponse getConversationByMatch(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @PathVariable Long matchId
+    ) {
+        User currentUser = currentUserService.requireCurrentUser(authorization);
+        return chatService.getConversationByMatch(matchId, currentUser.getId());
+    }
+
     @GetMapping("/{conversationId}/messages")
     public List<ChatMessageResponse> getMessages(
             @RequestHeader(value = "Authorization", required = false) String authorization,
-            @PathVariable Long conversationId
+            @PathVariable Long conversationId,
+            @RequestParam(required = false) Long before,
+            @RequestParam(defaultValue = "50") int limit
     ) {
         User currentUser = currentUserService.requireCurrentUser(authorization);
-        return chatService.getMessages(conversationId, currentUser.getId());
+        return chatService.getMessages(conversationId, currentUser.getId(), before, limit);
     }
 
     @PostMapping("/{conversationId}/messages")
