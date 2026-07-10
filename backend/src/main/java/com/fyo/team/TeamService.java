@@ -231,6 +231,7 @@ public class TeamService {
         joinRequest.accept();
         team.takeOpenSpot();
         teamMemberRepository.save(new TeamMember(team, joinRequest.getUser(), TeamMemberRole.MEMBER));
+        chatService.addUserToTeamConversation(team.getId(), joinRequest.getUser());
 
         return toJoinRequestResponse(joinRequest);
     }

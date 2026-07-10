@@ -102,7 +102,7 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
 
   async function handleAccept(requestId: number) {
     try {
-      await teamsApi.acceptRequest(teamId, requestId);
+      await teamsApi.acceptRequest(teamId, requestId, currentUserId);
       setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
       const updated = await teamsApi.get(teamId);
       setTeam(updated);
@@ -114,7 +114,7 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
 
   async function handleDecline(requestId: number) {
     try {
-      await teamsApi.declineRequest(teamId, requestId);
+      await teamsApi.declineRequest(teamId, requestId, currentUserId);
       setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
     } catch (err) {
       alert((err as ApiError).message);
