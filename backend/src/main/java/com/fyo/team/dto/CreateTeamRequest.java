@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 
 public record CreateTeamRequest(
         @NotBlank @Size(max = 255) String name,
@@ -14,6 +15,8 @@ public record CreateTeamRequest(
         String logoUrl,
         @NotNull @Min(1) @Max(100) Integer maxPlayers,
         Boolean isRecruiting,
-        @NotNull Long captainUserId
+        @NotNull Long captainUserId,
+        /** Players the captain adds up front. The captain's own id is ignored. */
+        List<Long> memberUserIds
 ) {
 }
