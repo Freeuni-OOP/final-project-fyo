@@ -11,8 +11,10 @@ import { Splash } from "./app/Splash";
 import { SessionError } from "./app/SessionError";
 import { isRoot, matchesRoute, Redirect, useHashRoute } from "./routing";
 import { useSession } from "./session/SessionContext";
+import { AdminPage } from "./app/pages/AdminPage";
 import Login from "./Login";
 import Signup from "./Signup";
+
 
 /**
  * Hash routes:
@@ -85,6 +87,14 @@ function AppRoutes({ hash }: { hash: string }) {
     return (
       <AppShell>
         <Dashboard />
+      </AppShell>
+    );
+  }
+  
+  if (matchesRoute(hash, "#/app/admin")) {
+    return (
+      <AppShell>
+        <AdminPage />
       </AppShell>
     );
   }
