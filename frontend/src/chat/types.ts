@@ -15,9 +15,13 @@ export interface ChatMessage {
   readAt: string | null;
 }
 
+export type ConversationType = "MATCH" | "DIRECT" | "TEAM";
+
 export interface Conversation {
   id: number;
+  type: ConversationType;
   matchId: number | null;
+  teamId: number | null;
   participants: ConversationParticipant[];
   lastMessage: ChatMessage | null;
   createdAt: string;

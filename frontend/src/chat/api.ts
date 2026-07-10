@@ -49,10 +49,15 @@ export const chatApi = {
   conversations: (token: string) =>
     request<Conversation[]>("/api/conversations", token),
 
-  createDirect: (token: string, otherUserId: number, matchId?: number) =>
+  createDirect: (token: string, otherUserId: number) =>
     request<Conversation>("/api/conversations/direct", token, {
       method: "POST",
-      body: JSON.stringify({ otherUserId, matchId: matchId ?? null }),
+      body: JSON.stringify({ otherUserId }),
+    }),
+
+  createTeam: (token: string, teamId: number) =>
+    request<Conversation>(`/api/conversations/team/${teamId}`, token, {
+      method: "POST",
     }),
 
   messages: (token: string, conversationId: number) =>

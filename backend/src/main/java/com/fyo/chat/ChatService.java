@@ -7,12 +7,20 @@ import com.fyo.chat.dto.CreateDirectConversationRequest;
 import com.fyo.domain.ChatMessage;
 import com.fyo.domain.Conversation;
 import com.fyo.domain.ConversationParticipant;
+import com.fyo.domain.Match;
+import com.fyo.domain.MatchFormat;
+import com.fyo.domain.Team;
+import com.fyo.domain.TeamMember;
 import com.fyo.domain.User;
 import com.fyo.repository.ChatMessageRepository;
 import com.fyo.repository.ConversationParticipantRepository;
 import com.fyo.repository.ConversationRepository;
+import com.fyo.repository.TeamMemberRepository;
 import com.fyo.repository.UserRepository;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,17 +33,20 @@ public class ChatService {
     private final ConversationParticipantRepository participantRepository;
     private final ChatMessageRepository messageRepository;
     private final UserRepository userRepository;
+    private final TeamMemberRepository teamMemberRepository;
 
     public ChatService(
             ConversationRepository conversationRepository,
             ConversationParticipantRepository participantRepository,
             ChatMessageRepository messageRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            TeamMemberRepository teamMemberRepository
     ) {
         this.conversationRepository = conversationRepository;
         this.participantRepository = participantRepository;
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
+        this.teamMemberRepository = teamMemberRepository;
     }
 
     @Transactional(readOnly = true)
@@ -78,28 +89,102 @@ public class ChatService {
         return toMessageResponse(saved);
     }
 
+    /** Creates (or returns the existing) 1:1 thread between the caller and another user. */
     @Transactional
     public ConversationResponse createDirectConversation(Long currentUserId, CreateDirectConversationRequest request) {
         if (currentUserId.equals(request.otherUserId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Conversation needs two different users");
         }
 
-        if (request.matchId() != null) {
-            return conversationRepository.findByMatchId(request.matchId())
-                    .map(this::toConversationResponse)
-                    .orElseGet(() -> createConversation(currentUserId, request));
-        }
-
-        return createConversation(currentUserId, request);
+        return conversationRepository.findDirectBetween(currentUserId, request.otherUserId())
+                .map(this::toConversationResponse)
+                .orElseGet(() -> createDirect(currentUserId, request.otherUserId()));
     }
 
-    private ConversationResponse createConversation(Long currentUserId, CreateDirectConversationRequest request) {
+    /**
+     * Creates (or returns the existing) group chat for a team roster. Only
+     * members of the team may open it; every current member joins as a
+     * participant. Idempotent per team (conversations.team_id is UNIQUE).
+     */
+    @Transactional
+    public ConversationResponse createTeamConversation(Long currentUserId, Long teamId) {
+        if (!teamMemberRepository.existsByTeamIdAndUserId(teamId, currentUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only team members can open the team chat");
+        }
+
+        return conversationRepository.findByTeamId(teamId)
+                .map(this::toConversationResponse)
+                .orElseGet(() -> {
+                    Conversation conversation = conversationRepository.save(Conversation.forTeam(teamId));
+                    for (TeamMember member : teamMemberRepository.findByTeamId(teamId)) {
+                        participantRepository.save(new ConversationParticipant(conversation, member.getUser()));
+                    }
+                    return toConversationResponse(conversation);
+                });
+    }
+
+    /**
+     * Keeps the team chat in sync with the roster: called when a user joins a
+     * team, so an existing team conversation picks them up. No-op when the
+     * team has no chat yet or the user is already in it.
+     */
+    @Transactional
+    public void addUserToTeamConversation(Long teamId, User user) {
+        conversationRepository.findByTeamId(teamId).ifPresent(conversation -> {
+            if (!participantRepository.existsByConversationIdAndUserId(conversation.getId(), user.getId())) {
+                participantRepository.save(new ConversationParticipant(conversation, user));
+            }
+        });
+    }
+
+    /**
+     * Creates the conversation for a freshly confirmed match, so both sides can
+     * agree on time, place, and rules. Idempotent per match (conversations.match_id
+     * is UNIQUE). ONE_VS_ONE gets the two players; TEAM_VS_TEAM gets every member
+     * of both rosters as a group chat.
+     *
+     * <p>Internal API — called by the match acceptance flow, never from a
+     * controller with client-supplied ids.
+     */
+    @Transactional
+    public ConversationResponse createMatchConversation(Match match) {
+        return conversationRepository.findByMatchId(match.getId())
+                .map(this::toConversationResponse)
+                .orElseGet(() -> {
+                    Conversation conversation = conversationRepository.save(Conversation.forMatch(match.getId()));
+                    for (User participant : matchParticipants(match)) {
+                        participantRepository.save(new ConversationParticipant(conversation, participant));
+                    }
+                    return toConversationResponse(conversation);
+                });
+    }
+
+    private Collection<User> matchParticipants(Match match) {
+        // Keyed by user id so a player on both rosters is added only once.
+        Map<Long, User> participants = new LinkedHashMap<>();
+        if (match.getFormat() == MatchFormat.ONE_VS_ONE) {
+            participants.put(match.getHomeUser().getId(), match.getHomeUser());
+            participants.put(match.getAwayUser().getId(), match.getAwayUser());
+        } else {
+            addRoster(participants, match.getHomeTeam());
+            addRoster(participants, match.getAwayTeam());
+        }
+        return participants.values();
+    }
+
+    private void addRoster(Map<Long, User> participants, Team team) {
+        for (TeamMember member : teamMemberRepository.findByTeamId(team.getId())) {
+            participants.put(member.getUser().getId(), member.getUser());
+        }
+    }
+
+    private ConversationResponse createDirect(Long currentUserId, Long otherUserId) {
         User currentUser = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Current user not found"));
-        User otherUser = userRepository.findById(request.otherUserId())
+        User otherUser = userRepository.findById(otherUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Other user not found"));
 
-        Conversation conversation = conversationRepository.save(new Conversation(request.matchId()));
+        Conversation conversation = conversationRepository.save(Conversation.direct());
         participantRepository.save(new ConversationParticipant(conversation, currentUser));
         participantRepository.save(new ConversationParticipant(conversation, otherUser));
 
@@ -135,7 +220,9 @@ public class ChatService {
 
         return new ConversationResponse(
                 conversation.getId(),
+                conversation.getType(),
                 conversation.getMatchId(),
+                conversation.getTeamId(),
                 participants,
                 lastMessage,
                 conversation.getCreatedAt()

@@ -39,7 +39,15 @@ function otherParticipants(conversation: Conversation, userId: number) {
 function conversationName(conversation: Conversation, userId: number) {
   const others = otherParticipants(conversation, userId);
   if (others.length === 0) return "Just you";
+  if (conversation.type === "TEAM") return `Team chat (${conversation.participants.length})`;
+  if (others.length > 2) return `${others[0].fullName} +${others.length - 1}`;
   return others.map((p) => p.fullName).join(", ");
+}
+
+function conversationBadge(conversation: Conversation): string | null {
+  if (conversation.type === "MATCH") return "Match";
+  if (conversation.type === "TEAM") return "Team";
+  return null;
 }
 
 export function ChatView() {
@@ -319,7 +327,12 @@ export function ChatView() {
                         size={38}
                       />
                       <span className="chat__conversation-copy">
-                        <strong>{title}</strong>
+                        <strong>
+                          {title}
+                          {conversationBadge(conversation) && (
+                            <span className="chat__badge"> {conversationBadge(conversation)}</span>
+                          )}
+                        </strong>
                         <span>
                           {conversation.lastMessage?.body ?? `Conversation #${conversation.id}`}
                         </span>

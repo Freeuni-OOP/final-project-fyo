@@ -1,5 +1,6 @@
 package com.fyo.team;
 
+import com.fyo.chat.ChatService;
 import com.fyo.domain.*;
 import com.fyo.repository.*;
 import com.fyo.team.dto.*;
@@ -20,19 +21,22 @@ public class TeamService {
     private final UserRepository userRepository;
     private final SportRepository sportRepository;
     private final JoinRequestRepository joinRequestRepository;
+    private final ChatService chatService;
 
     public TeamService(
             TeamRepository teamRepository,
             TeamMemberRepository teamMemberRepository,
             UserRepository userRepository,
             SportRepository sportRepository,
-            JoinRequestRepository joinRequestRepository
+            JoinRequestRepository joinRequestRepository,
+            ChatService chatService
     ) {
         this.teamRepository = teamRepository;
         this.teamMemberRepository = teamMemberRepository;
         this.userRepository = userRepository;
         this.sportRepository = sportRepository;
         this.joinRequestRepository = joinRequestRepository;
+        this.chatService = chatService;
     }
 
     @Transactional(readOnly = true)
@@ -132,6 +136,7 @@ public class TeamService {
 
         team.takeOpenSpot();
         teamMemberRepository.save(new TeamMember(team, user, TeamMemberRole.MEMBER));
+        chatService.addUserToTeamConversation(team.getId(), user);
 
         return toDetailsResponse(team, teamMemberRepository.findByTeamId(team.getId()));
     }
@@ -221,6 +226,7 @@ public class TeamService {
         joinRequest.accept();
         team.takeOpenSpot();
         teamMemberRepository.save(new TeamMember(team, joinRequest.getUser(), TeamMemberRole.MEMBER));
+        chatService.addUserToTeamConversation(team.getId(), joinRequest.getUser());
 
         return toJoinRequestResponse(joinRequest);
     }
