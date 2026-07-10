@@ -646,6 +646,10 @@
   color: var(--ink-70);
 }
 
+.court .td__chat-entry {
+  margin-top: 18px;
+}
+
 .court .td__roster-meta {
   margin-top: 24px;
 }

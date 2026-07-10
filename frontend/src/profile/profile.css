@@ -144,6 +144,20 @@
   font-weight: 600;
 }
 
+.pf-card__actions {
+  margin: 0.55rem 0 0;
+  font-size: 0.9rem;
+}
+
+.pf-card__actions a {
+  color: var(--court, #1a4d2e);
+  text-decoration: none;
+}
+
+.pf-card__actions a:hover {
+  text-decoration: underline;
+}
+
 .pf-pill {
   font-family: var(--font-mono, "JetBrains Mono", monospace);
   font-size: 0.75rem;
