@@ -42,6 +42,3 @@ skills-lock.json
 
 # Orphan root lockfile (app lockfile lives in frontend/)
 /package-lock.json
-
-# Unrelated course material accidentally committed
-34QuizWebsite.pdf
