@@ -164,7 +164,8 @@ class JoinRequestServiceTests {
                 "https://example.com/logo.png",
                 maxPlayers,
                 isRecruiting,
-                captain.getId()
+                captain.getId(),
+                List.of()
         ));
     }
 }
