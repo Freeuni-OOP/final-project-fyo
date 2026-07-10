@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ApiError, chatApi, socketUrl } from "./api";
 import { MiniStompClient, type SocketStatus } from "./stomp";
 import type { ChatMessage, Conversation } from "./types";
+import { useSession } from "../session/SessionContext";
+import { useAuth } from "../hooks/useAuth";
 import { Avatar, Button, Wordmark } from "../teams/ui";
 import "../teams/theme.css";
 import "./chat.css";
@@ -41,9 +43,13 @@ function conversationName(conversation: Conversation, userId: number) {
 }
 
 export function ChatView() {
-  const [userInput, setUserInput] = useState("1");
-  const [userId, setUserId] = useState<number>(1);
-  const [peerInput, setPeerInput] = useState("2");
+  const { user } = useSession();
+  const { getIdToken } = useAuth();
+
+  // App only routes here when authed, but the session can drop mid-visit.
+  const userId = user?.id ?? null;
+
+  const [peerInput, setPeerInput] = useState("");
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<number | null>(null);
@@ -68,11 +74,20 @@ export function ChatView() {
     setError(err instanceof ApiError || err instanceof Error ? err.message : "Something went wrong");
   }
 
-  async function loadConversations(nextUserId = userId) {
+  const requireToken = useCallback(async (): Promise<string> => {
+    const token = await getIdToken();
+    if (!token) {
+      throw new ApiError(401, "Your session expired. Sign in again.");
+    }
+    return token;
+  }, [getIdToken]);
+
+  const loadConversations = useCallback(async () => {
     setLoadingConversations(true);
     setError(null);
     try {
-      const loaded = await chatApi.conversations(nextUserId);
+      const token = await requireToken();
+      const loaded = await chatApi.conversations(token);
       setConversations(loaded);
       setActiveId((current) => current ?? loaded[0]?.id ?? null);
     } catch (err) {
@@ -80,19 +95,7 @@ export function ChatView() {
     } finally {
       setLoadingConversations(false);
     }
-  }
-
-  function applyUser() {
-    const id = parseId(userInput);
-    if (!id) {
-      setError("Enter a valid numeric user id.");
-      return;
-    }
-    setUserId(id);
-    setActiveId(null);
-    setMessages([]);
-    void loadConversations(id);
-  }
+  }, [requireToken]);
 
   async function startConversation(e: React.FormEvent) {
     e.preventDefault();
@@ -108,20 +111,22 @@ export function ChatView() {
 
     setError(null);
     try {
-      const created = await chatApi.createDirect(userId, peerId);
+      const token = await requireToken();
+      const created = await chatApi.createDirect(token, peerId);
       setConversations((prev) => {
         const exists = prev.some((c) => c.id === created.id);
         return exists ? prev.map((c) => (c.id === created.id ? created : c)) : [created, ...prev];
       });
       setActiveId(created.id);
+      setPeerInput("");
     } catch (err) {
       setApiError(err);
     }
   }
 
   useEffect(() => {
-    void loadConversations(1);
-  }, []);
+    if (userId !== null) void loadConversations();
+  }, [userId, loadConversations]);
 
   useEffect(() => {
     if (activeId === null) {
@@ -129,14 +134,25 @@ export function ChatView() {
       return;
     }
 
+    let alive = true;
     setLoadingMessages(true);
     setError(null);
-    chatApi
-      .messages(activeId, userId)
-      .then(setMessages)
-      .catch(setApiError)
-      .finally(() => setLoadingMessages(false));
-  }, [activeId, userId]);
+    (async () => {
+      try {
+        const token = await requireToken();
+        const loaded = await chatApi.messages(token, activeId);
+        if (alive) setMessages(loaded);
+      } catch (err) {
+        if (alive) setApiError(err);
+      } finally {
+        if (alive) setLoadingMessages(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [activeId, requireToken]);
 
   useEffect(() => {
     if (activeId === null) return;
@@ -180,7 +196,7 @@ export function ChatView() {
 
   async function sendMessage(e: React.FormEvent) {
     e.preventDefault();
-    if (activeId === null || !draft.trim()) return;
+    if (activeId === null || userId === null || !draft.trim()) return;
 
     const body = draft.trim();
     setDraft("");
@@ -194,7 +210,8 @@ export function ChatView() {
           body,
         });
       } else {
-        const saved = await chatApi.send(activeId, userId, body);
+        const token = await requireToken();
+        const saved = await chatApi.send(token, activeId, body);
         setMessages((prev) => [...prev, saved]);
         setConversations((prev) =>
           prev.map((conversation) =>
@@ -210,6 +227,18 @@ export function ChatView() {
     } finally {
       setSending(false);
     }
+  }
+
+  if (userId === null || !user) {
+    return (
+      <div className="court chat">
+        <main className="chat__shell" id="chat">
+          <p className="chat__state">
+            You need to be signed in to use chat. <a href="#/login">Log in</a>
+          </p>
+        </main>
+      </div>
+    );
   }
 
   return (
@@ -230,7 +259,7 @@ export function ChatView() {
           <p className="eyebrow">Match chat</p>
           <h1 className="section-title chat__title">Talk after the match</h1>
           <p className="section-lead">
-            This temporary screen uses player ids until auth and real match acceptance are connected.
+            Agree on time, place, and rules with your opponents.
           </p>
         </section>
 
@@ -238,24 +267,12 @@ export function ChatView() {
           <aside className="chat__side">
             <div className="chat__panel-head">
               <div>
-                <p className="chat__label">Current player</p>
-                <strong>#{userId}</strong>
+                <p className="chat__label">Signed in as</p>
+                <strong>@{user.username || user.name}</strong>
               </div>
               <span className={`chat__status chat__status--${socketStatus}`}>
                 {socketStatus}
               </span>
-            </div>
-
-            <div className="chat__idrow">
-              <input
-                aria-label="Current user id"
-                value={userInput}
-                inputMode="numeric"
-                onChange={(e) => setUserInput(e.target.value)}
-              />
-              <button type="button" onClick={applyUser}>
-                Load
-              </button>
             </div>
 
             <form className="chat__start" onSubmit={startConversation}>
@@ -265,6 +282,7 @@ export function ChatView() {
                   id="peer-id"
                   value={peerInput}
                   inputMode="numeric"
+                  placeholder="e.g. 2"
                   onChange={(e) => setPeerInput(e.target.value)}
                 />
                 <button type="submit">Start</button>

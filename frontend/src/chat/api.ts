@@ -9,12 +9,22 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+/** Identity travels only in the Bearer token; the backend resolves the
+ *  caller from it, so no endpoint takes a user id anymore. */
+async function request<T>(
+  path: string,
+  token: string,
+  init?: RequestInit
+): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`${BASE}${path}`, {
-      headers: { "Content-Type": "application/json" },
       ...init,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        ...(init?.headers as Record<string, string> | undefined),
+      },
     });
   } catch {
     throw new ApiError(0, "Can't reach the server. Is the backend running?");
@@ -25,6 +35,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     try {
       const body = await res.json();
       if (body?.message) message = body.message;
+      else if (body?.detail) message = body.detail;
     } catch {
       /* keep default */
     }
@@ -35,24 +46,25 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const chatApi = {
-  conversations: (userId: number) =>
-    request<Conversation[]>(`/api/conversations?userId=${userId}`),
+  conversations: (token: string) =>
+    request<Conversation[]>("/api/conversations", token),
 
-  createDirect: (userAId: number, userBId: number) =>
-    request<Conversation>("/api/conversations/direct", {
+  createDirect: (token: string, otherUserId: number, matchId?: number) =>
+    request<Conversation>("/api/conversations/direct", token, {
       method: "POST",
-      body: JSON.stringify({ userAId, userBId }),
+      body: JSON.stringify({ otherUserId, matchId: matchId ?? null }),
     }),
 
-  messages: (conversationId: number, userId: number) =>
+  messages: (token: string, conversationId: number) =>
     request<ChatMessage[]>(
-      `/api/conversations/${conversationId}/messages?userId=${userId}`
+      `/api/conversations/${conversationId}/messages`,
+      token
     ),
 
-  send: (conversationId: number, senderUserId: number, body: string) =>
-    request<ChatMessage>(`/api/conversations/${conversationId}/messages`, {
+  send: (token: string, conversationId: number, body: string) =>
+    request<ChatMessage>(`/api/conversations/${conversationId}/messages`, token, {
       method: "POST",
-      body: JSON.stringify({ senderUserId, body }),
+      body: JSON.stringify({ body }),
     }),
 };
 
