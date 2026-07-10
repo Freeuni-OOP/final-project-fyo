@@ -171,9 +171,19 @@ export function ChatView() {
   useEffect(() => {
     if (activeId === null) return;
 
+    let alive = true;
     const client = new MiniStompClient(socketUrl(), setSocketStatus);
     socketRef.current = client;
-    client.connect();
+
+    (async () => {
+      try {
+        const token = await requireToken();
+        if (!alive) return;
+        client.connect({ Authorization: `Bearer ${token}` });
+      } catch (err) {
+        if (alive) setApiError(err);
+      }
+    })();
 
     const subId = client.subscribe(`/topic/conversations/${activeId}`, (body) => {
       try {
@@ -195,11 +205,12 @@ export function ChatView() {
     });
 
     return () => {
+      alive = false;
       client.unsubscribe(subId);
       client.disconnect();
       if (socketRef.current === client) socketRef.current = null;
     };
-  }, [activeId]);
+  }, [activeId, requireToken]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -219,10 +230,7 @@ export function ChatView() {
 
     try {
       if (socketStatus === "connected" && socketRef.current) {
-        socketRef.current.publish(`/app/conversations/${activeId}/send`, {
-          senderUserId: userId,
-          body,
-        });
+        socketRef.current.publish(`/app/conversations/${activeId}/send`, { body });
       } else {
         const token = await requireToken();
         const saved = await chatApi.send(token, activeId, body);
