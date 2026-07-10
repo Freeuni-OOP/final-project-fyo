@@ -93,7 +93,7 @@ class JoinRequestServiceTests {
         TeamDetailsResponse team = createTeam(captain, 5, true);
         JoinRequestResponse request = teamService.requestToJoin(team.id(), applicant.getId());
 
-        JoinRequestResponse accepted = teamService.acceptJoinRequest(team.id(), request.id());
+        JoinRequestResponse accepted = teamService.acceptJoinRequest(team.id(), request.id(), captain.getId());
 
         assertThat(accepted.status().name()).isEqualTo("ACCEPTED");
 
@@ -113,7 +113,7 @@ class JoinRequestServiceTests {
         TeamDetailsResponse team = createTeam(captain, 5, true);
         JoinRequestResponse request = teamService.requestToJoin(team.id(), applicant.getId());
 
-        JoinRequestResponse declined = teamService.declineJoinRequest(team.id(), request.id());
+        JoinRequestResponse declined = teamService.declineJoinRequest(team.id(), request.id(), captain.getId());
 
         assertThat(declined.status().name()).isEqualTo("DECLINED");
 
@@ -129,9 +129,9 @@ class JoinRequestServiceTests {
 
         TeamDetailsResponse team = createTeam(captain, 5, true);
         JoinRequestResponse request = teamService.requestToJoin(team.id(), applicant.getId());
-        teamService.acceptJoinRequest(team.id(), request.id());
+        teamService.acceptJoinRequest(team.id(), request.id(), captain.getId());
 
-        assertThatThrownBy(() -> teamService.acceptJoinRequest(team.id(), request.id()))
+        assertThatThrownBy(() -> teamService.acceptJoinRequest(team.id(), request.id(), captain.getId()))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Request is not pending");
     }
@@ -146,7 +146,7 @@ class JoinRequestServiceTests {
         TeamDetailsResponse team = createTeam(captain, 5, true);
         JoinRequestResponse req1 = teamService.requestToJoin(team.id(), applicant1.getId());
         teamService.requestToJoin(team.id(), applicant2.getId());
-        teamService.declineJoinRequest(team.id(), req1.id());
+        teamService.declineJoinRequest(team.id(), req1.id(), captain.getId());
 
         List<JoinRequestResponse> pending = teamService.getPendingJoinRequests(team.id());
 
