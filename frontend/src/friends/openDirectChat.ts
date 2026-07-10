@@ -6,13 +6,13 @@ const OPEN_CHAT_KEY = "fyo.openChatId";
 export async function openDirectChat(token: string, otherUserId: number): Promise<void> {
   const conversation = await chatApi.createDirect(token, otherUserId);
   sessionStorage.setItem(OPEN_CHAT_KEY, String(conversation.id));
-  window.location.hash = "#/chat";
+  window.location.hash = "#/app/chat";
 }
 
 export async function openTeamChat(token: string, teamId: number): Promise<void> {
   const conversation = await chatApi.createTeam(token, teamId);
   sessionStorage.setItem(OPEN_CHAT_KEY, String(conversation.id));
-  window.location.hash = "#/chat";
+  window.location.hash = "#/app/chat";
 }
 
 export function consumeOpenChatId(): number | null {

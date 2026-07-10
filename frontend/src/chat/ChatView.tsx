@@ -6,25 +6,15 @@ import { chatConversationPath, parseChatRoute } from "./routes";
 import { consumeOpenChatId } from "../friends/openDirectChat";
 import { useSession } from "../session/SessionContext";
 import { useAuth } from "../hooks/useAuth";
+import { usersApi } from "../api/users";
 import { useHashRoute } from "../routing";
-import { Avatar, Button, Wordmark } from "../teams/ui";
+import { Avatar } from "../teams/ui";
+import type { UserSummary } from "../teams/types";
 import "../teams/theme.css";
 import "./chat.css";
 
 const MESSAGE_PAGE_SIZE = 50;
 
-const goHome = () => {
-  window.location.hash = "#/";
-};
-
-const goTeams = () => {
-  window.location.hash = "#/teams";
-};
-
-function parseId(value: string): number | null {
-  const id = Number(value);
-  return Number.isInteger(id) && id > 0 ? id : null;
-}
 
 function formatTime(iso: string): string {
   try {
@@ -44,7 +34,8 @@ function otherParticipants(conversation: Conversation, userId: number) {
 function conversationName(conversation: Conversation, userId: number) {
   const others = otherParticipants(conversation, userId);
   if (others.length === 0) return "Just you";
-  if (conversation.type === "TEAM") return `Team chat (${conversation.participants.length})`;
+  if (conversation.type === "TEAM") return conversation.title ?? "Team chat";
+  if (conversation.type === "MATCH") return conversation.title ?? "Match chat";
   if (others.length > 2) return `${others[0].fullName} +${others.length - 1}`;
   return others.map((p) => p.fullName).join(", ");
 }
@@ -75,6 +66,9 @@ export function ChatView() {
   const userId = user?.id ?? null;
 
   const [peerInput, setPeerInput] = useState("");
+  const [peerResults, setPeerResults] = useState<UserSummary[]>([]);
+  const [selectedPeer, setSelectedPeer] = useState<UserSummary | null>(null);
+  const [searchingPeers, setSearchingPeers] = useState(false);
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<number | null>(null);
@@ -184,27 +178,62 @@ export function ChatView() {
 
   async function startConversation(e: React.FormEvent) {
     e.preventDefault();
-    const peerId = parseId(peerInput);
-    if (!peerId) {
-      setError("Enter a valid numeric player id.");
+    if (!selectedPeer) {
+      setError("Choose a player from the search results.");
       return;
     }
-    if (peerId === userId) {
-      setError("Choose a different player id.");
+    if (selectedPeer.id === userId) {
+      setError("Choose a different player.");
       return;
     }
 
     setError(null);
     try {
       const token = await requireToken();
-      const created = await chatApi.createDirect(token, peerId);
+      const created = await chatApi.createDirect(token, selectedPeer.id);
       mergeConversation(created);
       selectConversation(created.id);
       setPeerInput("");
+      setSelectedPeer(null);
+      setPeerResults([]);
     } catch (err) {
       setApiError(err);
     }
   }
+
+  useEffect(() => {
+    const term = peerInput.trim();
+    if (selectedPeer && term === `${selectedPeer.name} ${selectedPeer.surname}`.trim()) return;
+    setSelectedPeer(null);
+
+    if (term.length < 2) {
+      setPeerResults([]);
+      setSearchingPeers(false);
+      return;
+    }
+
+    let alive = true;
+    setSearchingPeers(true);
+    const timeout = window.setTimeout(() => {
+      usersApi
+        .search(term, 6)
+        .then((users) => {
+          if (!alive) return;
+          setPeerResults(users.filter((candidate) => candidate.id !== userId));
+        })
+        .catch((err) => {
+          if (alive) setApiError(err);
+        })
+        .finally(() => {
+          if (alive) setSearchingPeers(false);
+        });
+    }, 180);
+
+    return () => {
+      alive = false;
+      window.clearTimeout(timeout);
+    };
+  }, [peerInput, selectedPeer, userId]);
 
   useEffect(() => {
     if (userId !== null) void loadConversations();
@@ -379,18 +408,7 @@ export function ChatView() {
   }
 
   return (
-    <div className="court chat">
-      <header className="bar">
-        <Wordmark onClick={goHome} />
-        <nav className="bar__nav" aria-label="Primary">
-          <button type="button" onClick={goTeams}>Teams</button>
-          <a href="#/chat">Chat</a>
-        </nav>
-        <Button variant="ghost" className="bar__cta" onClick={goHome}>
-          Home
-        </Button>
-      </header>
-
+    <div className="chat">
       <main className="chat__shell" id="chat">
         <section className="chat__intro">
           <p className="eyebrow">Messages</p>
@@ -413,17 +431,44 @@ export function ChatView() {
             </div>
 
             <form className="chat__start" onSubmit={startConversation}>
-              <label htmlFor="peer-id">Start with player id</label>
+              <label htmlFor="peer-search">Start with player</label>
               <div className="chat__idrow">
                 <input
-                  id="peer-id"
+                  id="peer-search"
                   value={peerInput}
-                  inputMode="numeric"
-                  placeholder="e.g. 2"
+                  placeholder="Search name or username"
+                  autoComplete="off"
                   onChange={(e) => setPeerInput(e.target.value)}
                 />
-                <button type="submit">Start</button>
+                <button type="submit" disabled={!selectedPeer}>Start</button>
               </div>
+              {peerInput.trim().length >= 2 && !selectedPeer && (
+                <div className="chat__search-results">
+                  {searchingPeers && <p>Searching...</p>}
+                  {!searchingPeers && peerResults.length === 0 && <p>No players found.</p>}
+                  {!searchingPeers && peerResults.map((candidate) => {
+                    const fullName = `${candidate.name} ${candidate.surname}`.trim();
+                    return (
+                      <button
+                        type="button"
+                        key={candidate.id}
+                        onClick={() => {
+                          setSelectedPeer(candidate);
+                          setPeerInput(fullName || candidate.username);
+                          setPeerResults([]);
+                          setError(null);
+                        }}
+                      >
+                        <Avatar src={candidate.imageUrl} name={fullName || candidate.username} size={30} />
+                        <span>
+                          <strong>{fullName || candidate.username}</strong>
+                          <small>@{candidate.username}{candidate.region ? ` - ${candidate.region}` : ""}</small>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </form>
 
             <div className="chat__list-head">
@@ -464,7 +509,7 @@ export function ChatView() {
                           </span>
                         </strong>
                         <span>
-                          {conversation.lastMessage?.body ?? `Conversation #${conversation.id}`}
+                          {conversation.lastMessage?.body ?? conversation.subtitle ?? `Conversation #${conversation.id}`}
                         </span>
                       </span>
                     </button>
@@ -486,6 +531,9 @@ export function ChatView() {
                         {conversationBadge(activeConversation)}
                       </span>
                     </h2>
+                    {activeConversation.subtitle && (
+                      <p className="chat__thread-subtitle">{activeConversation.subtitle}</p>
+                    )}
                   </div>
                   <span>#{activeConversation.id}</span>
                 </>
@@ -556,3 +604,4 @@ export function ChatView() {
     </div>
   );
 }
+

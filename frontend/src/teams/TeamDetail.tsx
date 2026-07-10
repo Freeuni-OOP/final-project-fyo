@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { ApiError, teamsApi } from "./api";
 import { chatApi } from "../chat/api";
-import { useAuth } from "../hooks/useAuth";
 import type { TeamDetails, JoinRequest } from "./types";
 import { Avatar, Ball, Button } from "./ui";
 import { useAuth } from "../hooks/useAuth";
@@ -60,7 +59,7 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
     setLoadingRequests(true);
     getIdToken().then(token => {
         if (!token) return;
-        teamsApi.getPendingRequests(teamId, token)
+        teamsApi.getPendingRequests(token, teamId)
           .then(setPendingRequests)
           .catch(() => {})
           .finally(() => setLoadingRequests(false));
@@ -285,3 +284,4 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
     </div>
   );
 }
+

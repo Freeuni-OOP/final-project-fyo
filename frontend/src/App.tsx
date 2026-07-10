@@ -25,11 +25,11 @@ import Signup from "./Signup";
  * Hash routes:
  *   public   #/  #/home  #/login  #/signup  #/teams  #/teams/:id
  *   signed in  #/app  #/app/teams  #/app/teams/:id  #/app/my-teams  #/app/friends
- *              #/app/matches  #/app/profile  #/profile/:id  #/onboarding  #/chat
+ *              #/app/matches  #/app/chat  #/app/profile  #/profile/:id  #/onboarding
  *
  * Signed-in users are redirected off the public marketing pages and into the
  * platform shell. In-page anchors on the landing page (`#sports`, `#how`) are
- * not routes — they never start with `#/`, so they fall through to the landing.
+ * not routes - they never start with `#/`, so they fall through to the landing.
  */
 export default function App() {
   const hash = useHashRoute();
@@ -53,7 +53,8 @@ export default function App() {
   }
 
   if (matchesRoute(hash, "#/chat")) {
-    return authed ? <ChatView /> : <Redirect to="#/login" />;
+    const suffix = hash.slice("#/chat".length);
+    return authed ? <Redirect to={`#/app/chat${suffix}`} /> : <Redirect to="#/login" />;
   }
 
   if (matchesRoute(hash, "#/profile")) {
@@ -125,6 +126,14 @@ function AppRoutes({ hash }: { hash: string }) {
     return (
       <AppShell>
         <TeamPage teamId={teamId} />
+      </AppShell>
+    );
+  }
+
+  if (matchesRoute(hash, "#/app/chat")) {
+    return (
+      <AppShell>
+        <ChatView />
       </AppShell>
     );
   }
