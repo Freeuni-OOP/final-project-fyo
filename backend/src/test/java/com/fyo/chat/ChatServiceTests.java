@@ -130,7 +130,7 @@ class ChatServiceTests {
         // Second call must not duplicate the participant row.
         chatService.addUserToTeamConversation(team.getId(), newcomer);
 
-        assertThat(chatService.getMessages(conversation.id(), newcomer.getId())).isEmpty();
+        assertThat(chatService.getMessages(conversation.id(), newcomer.getId(), null, 50)).isEmpty();
     }
 
     @Test
@@ -163,7 +163,7 @@ class ChatServiceTests {
         assertThat(sent.body()).isEqualTo("hello from chat");
         // The thread may be a reused existing conversation with prior history,
         // so assert on the newest message rather than the whole list.
-        assertThat(chatService.getMessages(conversation.id(), receiver.getId()))
+        assertThat(chatService.getMessages(conversation.id(), receiver.getId(), null, 50))
                 .extracting(message -> message.body())
                 .endsWith("hello from chat");
     }
@@ -196,7 +196,7 @@ class ChatServiceTests {
                 new CreateDirectConversationRequest(userB.getId())
         );
 
-        assertThatThrownBy(() -> chatService.getMessages(conversation.id(), outsider.getId()))
+        assertThatThrownBy(() -> chatService.getMessages(conversation.id(), outsider.getId(), null, 50))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("User is not a conversation participant");
     }

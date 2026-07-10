@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../hooks/useAuth";
+import { openTeamChat } from "../friends/openDirectChat";
 import { ApiError, teamsApi } from "./api";
 import { TeamJoinPanel } from "./TeamJoinPanel";
 import type { TeamDetails, JoinRequest } from "./types";
@@ -24,9 +26,11 @@ function formatDate(iso: string): string {
 }
 
 export function TeamDetailPage({ teamId, backHref, currentUserId }: TeamDetailPageProps) {
+  const { getIdToken } = useAuth();
   const [team, setTeam] = useState<TeamDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [openingChat, setOpeningChat] = useState(false);
 
   const [pendingRequests, setPendingRequests] = useState<JoinRequest[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
@@ -66,7 +70,7 @@ export function TeamDetailPage({ teamId, backHref, currentUserId }: TeamDetailPa
 
   async function handleAccept(requestId: number) {
     try {
-      await teamsApi.acceptRequest(teamId, requestId);
+      await teamsApi.acceptRequest(teamId, requestId, currentUserId!);
       setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
       setTeam(await teamsApi.get(teamId));
     } catch (err) {
@@ -76,7 +80,7 @@ export function TeamDetailPage({ teamId, backHref, currentUserId }: TeamDetailPa
 
   async function handleDecline(requestId: number) {
     try {
-      await teamsApi.declineRequest(teamId, requestId);
+      await teamsApi.declineRequest(teamId, requestId, currentUserId!);
       setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
     } catch (err) {
       alert((err as ApiError).message);
@@ -86,6 +90,24 @@ export function TeamDetailPage({ teamId, backHref, currentUserId }: TeamDetailPa
   const filled = team ? team.maxPlayers - team.openSpots : 0;
   const pct = team ? Math.round((filled / team.maxPlayers) * 100) : 0;
   const isCaptain = team && currentUserId && team.captain.id === currentUserId;
+  const isMember =
+    team &&
+    currentUserId &&
+    (team.captain.id === currentUserId ||
+      team.members.some((m) => m.userId === currentUserId));
+
+  async function handleOpenTeamChat() {
+    setOpeningChat(true);
+    try {
+      const token = await getIdToken();
+      if (!token) throw new Error("Your session expired. Sign in again.");
+      await openTeamChat(token, teamId);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Could not open team chat.");
+    } finally {
+      setOpeningChat(false);
+    }
+  }
 
   return (
     <article className="teampage">
@@ -128,6 +150,14 @@ export function TeamDetailPage({ teamId, backHref, currentUserId }: TeamDetailPa
           </span>
 
           {team.description && <p className="td__desc">{team.description}</p>}
+
+          {isMember && (
+            <p className="td__desc">
+              <Button variant="ghost" onClick={() => void handleOpenTeamChat()} disabled={openingChat}>
+                {openingChat ? "Opening chat…" : "Open team chat →"}
+              </Button>
+            </p>
+          )}
 
           <div className="td__roster-meta">
             <div className="meter">

@@ -60,20 +60,18 @@ public class TeamController {
     }
 
     @PostMapping("/{id}/join-requests/{requestId}/accept")
-    public JoinRequestResponse acceptJoinRequest(
-            @PathVariable Long id,
-            @PathVariable Long requestId,
-            @RequestParam Long actingUserId
-    ) {
-        return teamService.acceptJoinRequest(id, requestId, actingUserId);
+
+    public JoinRequestResponse acceptJoinRequest(@PathVariable Long id,
+                                                 @PathVariable Long requestId,
+                                                 @RequestParam Long captainUserId) {
+        return teamService.acceptJoinRequest(id, requestId, captainUserId);
     }
 
     @PostMapping("/{id}/join-requests/{requestId}/decline")
-    public JoinRequestResponse declineJoinRequest(
-            @PathVariable Long id,
-            @PathVariable Long requestId,
-            @RequestParam Long actingUserId
-    ) {
-        return teamService.declineJoinRequest(id, requestId, actingUserId);
+    public JoinRequestResponse declineJoinRequest(@PathVariable Long id,
+                                                  @PathVariable Long requestId,
+                                                  @RequestParam Long captainUserId) {
+        return teamService.declineJoinRequest(id, requestId, captainUserId);
+
     }
 }

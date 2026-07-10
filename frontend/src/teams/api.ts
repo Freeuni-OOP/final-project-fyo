@@ -33,12 +33,12 @@ export const teamsApi = {
     }),
   getPendingRequests: (teamId: number) =>
     request<JoinRequest[]>(`/api/teams/${teamId}/join-requests`),
-  acceptRequest: (teamId: number, requestId: number) =>
-    request<JoinRequest>(`/api/teams/${teamId}/join-requests/${requestId}/accept`, {
+  acceptRequest: (teamId: number, requestId: number, captainUserId: number) =>
+    request<JoinRequest>(`/api/teams/${teamId}/join-requests/${requestId}/accept?captainUserId=${captainUserId}`, {
       method: "POST",
     }),
-  declineRequest: (teamId: number, requestId: number) =>
-    request<JoinRequest>(`/api/teams/${teamId}/join-requests/${requestId}/decline`, {
+  declineRequest: (teamId: number, requestId: number, captainUserId: number) =>
+    request<JoinRequest>(`/api/teams/${teamId}/join-requests/${requestId}/decline?captainUserId=${captainUserId}`, {
       method: "POST",
     }),
 };

@@ -219,7 +219,7 @@ class TeamServiceTests {
         TeamDetailsResponse created = createTeam(captain, 3, true);
 
         JoinRequestResponse request = teamService.requestToJoin(created.id(), applicant.getId());
-        teamService.declineJoinRequest(created.id(), request.id());
+        teamService.declineJoinRequest(created.id(), request.id(), captain.getId());
 
         assertThatThrownBy(() -> teamService.requestToJoin(created.id(), applicant.getId()))
                 .isInstanceOf(ResponseStatusException.class)
@@ -286,7 +286,7 @@ class TeamServiceTests {
 
         teamService.requestToJoin(pendingTeam.id(), applicant.getId());
         JoinRequestResponse declined = teamService.requestToJoin(declinedTeam.id(), applicant.getId());
-        teamService.declineJoinRequest(declinedTeam.id(), declined.id());
+        teamService.declineJoinRequest(declinedTeam.id(), declined.id(), captain.getId());
 
         assertThat(teamService.getJoinRequestsForUser(applicant.getId()))
                 .filteredOn(request -> List.of(pendingTeam.id(), declinedTeam.id())
@@ -304,7 +304,7 @@ class TeamServiceTests {
         TeamDetailsResponse created = createTeam(captain, 3, true);
 
         JoinRequestResponse request = teamService.requestToJoin(created.id(), applicant.getId());
-        teamService.acceptJoinRequest(created.id(), request.id());
+        teamService.acceptJoinRequest(created.id(), request.id(), captain.getId());
 
         assertThat(teamService.getJoinRequestsForUser(applicant.getId()))
                 .extracting(myRequest -> myRequest.team().id())
