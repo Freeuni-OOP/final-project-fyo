@@ -4,7 +4,7 @@ import { Wordmark } from "../components/common/Wordmark";
 import { OnboardingForm } from "../components/onboarding/OnboardingForm";
 import { getSports, type SportDto } from "../api/Sports";
 import { submitOnboarding, type OnboardingPayload } from "../api/Onboarding";
-import { NotAuthenticatedError, readCurrentUserId } from "../auth/session";
+import { useAuth } from "../hooks/useAuth";
 import { useSession } from "../session/SessionContext";
 import "./OnboardingPage.css";
 
@@ -23,13 +23,13 @@ function readSignupPrefill(): { name: string; surname: string } {
 export function OnboardingPage() {
   useReveal();
 
-  const { refresh, signOut } = useSession();
+  const { refresh, signOut, user } = useSession();
+  const { getIdToken } = useAuth();
   const [sports, setSports] = useState<SportDto[]>([]);
   const [sportsError, setSportsError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [prefill] = useState(readSignupPrefill);
-  const [signedInUserId] = useState(() => readCurrentUserId());
 
   useEffect(() => {
     getSports()
@@ -41,7 +41,12 @@ export function OnboardingPage() {
     setSubmitting(true);
     setSubmitError(null);
     try {
-      await submitOnboarding(data);
+      const token = await getIdToken();
+      if (!token) {
+        setSubmitError("You need to sign in to complete onboarding.");
+        return;
+      }
+      await submitOnboarding(token, data);
       try {
         sessionStorage.removeItem("fyo.signupName");
         sessionStorage.removeItem("fyo.signupSurname");
@@ -53,10 +58,6 @@ export function OnboardingPage() {
       await refresh();
       window.location.hash = "#/app";
     } catch (err) {
-      if (err instanceof NotAuthenticatedError) {
-        setSubmitError("You need to sign in to complete onboarding.");
-        return;
-      }
       const msg = err instanceof Error ? err.message : "Something went wrong.";
       if (msg.toLowerCase().includes("username")) {
         setSubmitError("That username is already taken — try another one.");
@@ -105,7 +106,7 @@ export function OnboardingPage() {
       </aside>
 
       <main className="ob-page__main">
-        {signedInUserId === null ? (
+        {user === null ? (
           <div className="ob-page__load-error">
             <p>You need to sign in to complete onboarding.</p>
             <p>

@@ -89,7 +89,12 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
     setRequesting(true);
     setRequestError(null);
     try {
-      await teamsApi.requestToJoin(teamId, id);
+      const token = await getIdToken();
+      if (!token) {
+        setRequestError("Your session expired. Sign in again.");
+        return;
+      }
+      await teamsApi.requestToJoin(token, teamId);
       setRequested(true);
       setRequestOpen(false);
       setUserId("");
@@ -102,7 +107,9 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
 
   async function handleAccept(requestId: number) {
     try {
-      await teamsApi.acceptRequest(teamId, requestId, currentUserId);
+      const token = await getIdToken();
+      if (!token) throw new Error("Your session expired. Sign in again.");
+      await teamsApi.acceptRequest(token, teamId, requestId);
       setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
       const updated = await teamsApi.get(teamId);
       setTeam(updated);
@@ -114,7 +121,9 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
 
   async function handleDecline(requestId: number) {
     try {
-      await teamsApi.declineRequest(teamId, requestId, currentUserId);
+      const token = await getIdToken();
+      if (!token) throw new Error("Your session expired. Sign in again.");
+      await teamsApi.declineRequest(token, teamId, requestId);
       setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
     } catch (err) {
       alert((err as ApiError).message);

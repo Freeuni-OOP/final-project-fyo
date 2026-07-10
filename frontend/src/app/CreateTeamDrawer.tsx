@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getSports, type SportDto } from "../api/Sports";
 import { usersApi } from "../api/users";
+import { useAuth } from "../hooks/useAuth";
 import { ApiError, teamsApi } from "../teams/api";
 import type { TeamDetails, UserSummary } from "../teams/types";
 import { Avatar, Button } from "../teams/ui";
@@ -19,6 +20,7 @@ function fullName(user: UserSummary): string {
 }
 
 export function CreateTeamDrawer({ captainUserId, onClose, onCreated }: CreateTeamDrawerProps) {
+  const { getIdToken } = useAuth();
   const [sports, setSports] = useState<SportDto[]>([]);
   const [name, setName] = useState("");
   const [sportId, setSportId] = useState("");
@@ -118,7 +120,12 @@ export function CreateTeamDrawer({ captainUserId, onClose, onCreated }: CreateTe
     setSubmitting(true);
     setError(null);
     try {
-      const created = await teamsApi.create({
+      const token = await getIdToken();
+      if (!token) {
+        setError("Your session expired. Sign in again.");
+        return;
+      }
+      const created = await teamsApi.create(token, {
         name: name.trim(),
         sportId: sport,
         region: region.trim() || null,
@@ -126,7 +133,6 @@ export function CreateTeamDrawer({ captainUserId, onClose, onCreated }: CreateTe
         logoUrl: null,
         maxPlayers: players,
         isRecruiting,
-        captainUserId,
         memberUserIds: members.map((m) => m.id),
       });
       onCreated(created);

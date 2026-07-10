@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../hooks/useAuth";
 import { ApiError, teamsApi } from "./api";
 import type { MyJoinRequest, TeamDetails } from "./types";
 import { Button } from "./ui";
@@ -24,6 +25,7 @@ type ExistingRequest = MyJoinRequest | null | undefined;
  * the full team page so the two can't drift apart.
  */
 export function TeamJoinPanel({ team, currentUserId }: TeamJoinPanelProps) {
+  const { getIdToken } = useAuth();
   const [existing, setExisting] = useState<ExistingRequest>(undefined);
   const [sentJustNow, setSentJustNow] = useState(false);
 
@@ -42,23 +44,31 @@ export function TeamJoinPanel({ team, currentUserId }: TeamJoinPanelProps) {
   useEffect(() => {
     if (!knownViewer || isMember) return;
     let alive = true;
-    teamsApi
-      .myJoinRequests(currentUserId)
-      .then((requests) => {
+    (async () => {
+      try {
+        const token = await getIdToken();
+        if (!token || !alive) return;
+        const requests = await teamsApi.myJoinRequests(token);
         if (alive) setExisting(requests.find((r) => r.team.id === team.id) ?? null);
-      })
-      // Non-fatal: the server still rejects a duplicate with a clear message.
-      .catch(() => alive && setExisting(null));
+      } catch {
+        if (alive) setExisting(null);
+      }
+    })();
     return () => {
       alive = false;
     };
-  }, [knownViewer, currentUserId, isMember, team.id]);
+  }, [knownViewer, currentUserId, isMember, team.id, getIdToken]);
 
   async function send(applicantId: number) {
     setSending(true);
     setProblem(null);
     try {
-      await teamsApi.requestToJoin(team.id, applicantId);
+      const token = await getIdToken();
+      if (!token) {
+        setProblem({ text: "Your session expired. Sign in again.", kind: "error" });
+        return;
+      }
+      await teamsApi.requestToJoin(token, team.id);
       setSentJustNow(true);
       setFormOpen(false);
       setTypedUserId("");
@@ -68,10 +78,13 @@ export function TeamJoinPanel({ team, currentUserId }: TeamJoinPanelProps) {
       // A conflict means our picture of the viewer is stale. Re-read it so the
       // panel settles on the real state rather than re-offering the button.
       if (error.status === 409 && knownViewer) {
-        teamsApi
-          .myJoinRequests(currentUserId)
-          .then((requests) => setExisting(requests.find((r) => r.team.id === team.id) ?? null))
-          .catch(() => {});
+        const token = await getIdToken();
+        if (token) {
+          teamsApi
+            .myJoinRequests(token)
+            .then((requests) => setExisting(requests.find((r) => r.team.id === team.id) ?? null))
+            .catch(() => {});
+        }
       }
     } finally {
       setSending(false);

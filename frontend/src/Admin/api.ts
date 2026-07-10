@@ -9,12 +9,16 @@ class AdminApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+async function request<T>(path: string, token: string, init?: RequestInit): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`${BASE}${path}`, {
-      headers: { "Content-Type": "application/json" },
       ...init,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        ...(init?.headers as Record<string, string> | undefined),
+      },
     });
   } catch {
     throw new AdminApiError(0, "Can't reach the server. Is the backend running?");
@@ -25,6 +29,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     try {
       const body = await res.json();
       if (body?.message) message = body.message;
+      else if (body?.detail) message = body.detail;
     } catch {
       /* non-JSON error body */
     }
@@ -34,32 +39,21 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.status === 204 ? (undefined as T) : ((await res.json()) as T);
 }
 
-const ADMIN_ID = 1; // placeholder until real auth admin check
-
 export const adminApi = {
-  getUsers: () =>
-    request<UserAdmin[]>(`/api/admin/users?adminUserId=${ADMIN_ID}`),
-  archiveUser: (id: number) =>
-    request<UserAdmin>(`/api/admin/users/${id}?adminUserId=${ADMIN_ID}`, {
-      method: "DELETE",
-    }),
-  getTeams: () =>
-    request<TeamAdmin[]>(`/api/admin/teams?adminUserId=${ADMIN_ID}`),
-  archiveTeam: (id: number) =>
-    request<TeamAdmin>(`/api/admin/teams/${id}?adminUserId=${ADMIN_ID}`, {
-      method: "DELETE",
-    }),
-  getSports: () =>
-    request<SportAdmin[]>(`/api/admin/sports?adminUserId=${ADMIN_ID}`),
-  createSport: (sportName: string) =>
-    request<SportAdmin>(`/api/admin/sports?adminUserId=${ADMIN_ID}`, {
+  getUsers: (token: string) => request<UserAdmin[]>("/api/admin/users", token),
+  archiveUser: (token: string, id: number) =>
+    request<UserAdmin>(`/api/admin/users/${id}`, token, { method: "DELETE" }),
+  getTeams: (token: string) => request<TeamAdmin[]>("/api/admin/teams", token),
+  archiveTeam: (token: string, id: number) =>
+    request<TeamAdmin>(`/api/admin/teams/${id}`, token, { method: "DELETE" }),
+  getSports: (token: string) => request<SportAdmin[]>("/api/admin/sports", token),
+  createSport: (token: string, sportName: string) =>
+    request<SportAdmin>("/api/admin/sports", token, {
       method: "POST",
       body: JSON.stringify({ sportName }),
     }),
-  deleteSport: (id: number) =>
-    request<void>(`/api/admin/sports/${id}?adminUserId=${ADMIN_ID}`, {
-      method: "DELETE",
-    }),
+  deleteSport: (token: string, id: number) =>
+    request<void>(`/api/admin/sports/${id}`, token, { method: "DELETE" }),
 };
 
 export { AdminApiError };

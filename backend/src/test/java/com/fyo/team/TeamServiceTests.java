@@ -11,7 +11,6 @@ import com.fyo.repository.SportRepository;
 import com.fyo.repository.UserRepository;
 import com.fyo.team.dto.CreateTeamRequest;
 import com.fyo.team.dto.JoinRequestResponse;
-import com.fyo.team.dto.JoinTeamRequest;
 import com.fyo.team.dto.MyJoinRequestResponse;
 import com.fyo.team.dto.TeamDetailsResponse;
 import java.util.List;
@@ -56,7 +55,7 @@ class TeamServiceTests {
 
         TeamDetailsResponse created = createTeam(captain, 3, true);
 
-        TeamDetailsResponse joined = teamService.joinTeam(created.id(), new JoinTeamRequest(member.getId()));
+        TeamDetailsResponse joined = teamService.joinTeam(created.id(), member.getId());
 
         assertThat(joined.openSpots()).isEqualTo(1);
         assertThat(joined.members()).hasSize(2);
@@ -77,9 +76,9 @@ class TeamServiceTests {
         User member = users.get(1);
 
         TeamDetailsResponse created = createTeam(captain, 3, true);
-        teamService.joinTeam(created.id(), new JoinTeamRequest(member.getId()));
+        teamService.joinTeam(created.id(), member.getId());
 
-        assertThatThrownBy(() -> teamService.joinTeam(created.id(), new JoinTeamRequest(member.getId())))
+        assertThatThrownBy(() -> teamService.joinTeam(created.id(), member.getId()))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("User is already a team member");
     }
@@ -147,9 +146,8 @@ class TeamServiceTests {
                 "https://example.com/logo.png",
                 3,
                 true,
-                captain.getId(),
                 List.of()
-        )))
+        ), captain.getId()))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Sport not found");
     }
@@ -166,9 +164,8 @@ class TeamServiceTests {
                 "https://example.com/logo.png",
                 3,
                 true,
-                -1L,
                 List.of()
-        )))
+        ), -1L))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Captain user not found");
     }
@@ -180,7 +177,7 @@ class TeamServiceTests {
         User member = users.get(1);
         TeamDetailsResponse created = createTeam(captain, 3, false);
 
-        assertThatThrownBy(() -> teamService.joinTeam(created.id(), new JoinTeamRequest(member.getId())))
+        assertThatThrownBy(() -> teamService.joinTeam(created.id(), member.getId()))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Team is not recruiting");
     }
@@ -192,7 +189,7 @@ class TeamServiceTests {
         User member = users.get(1);
         TeamDetailsResponse created = createTeam(captain, 1, true);
 
-        assertThatThrownBy(() -> teamService.joinTeam(created.id(), new JoinTeamRequest(member.getId())))
+        assertThatThrownBy(() -> teamService.joinTeam(created.id(), member.getId()))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("Team has no open spots");
     }
@@ -232,7 +229,7 @@ class TeamServiceTests {
         User captain = users.get(0);
         User member = users.get(1);
         TeamDetailsResponse created = createTeam(captain, 3, true);
-        teamService.joinTeam(created.id(), new JoinTeamRequest(member.getId()));
+        teamService.joinTeam(created.id(), member.getId());
 
         assertThatThrownBy(() -> teamService.requestToJoin(created.id(), member.getId()))
                 .isInstanceOf(ResponseStatusException.class)
@@ -256,7 +253,7 @@ class TeamServiceTests {
         User captain = users.get(0);
         User member = users.get(1);
         TeamDetailsResponse created = createTeam(captain, 3, true);
-        teamService.joinTeam(created.id(), new JoinTeamRequest(member.getId()));
+        teamService.joinTeam(created.id(), member.getId());
 
         assertThat(teamService.getTeamsForUser(captain.getId()))
                 .filteredOn(myTeam -> myTeam.team().id().equals(created.id()))
@@ -330,8 +327,7 @@ class TeamServiceTests {
                 "https://example.com/logo.png",
                 maxPlayers,
                 isRecruiting,
-                captain.getId(),
                 memberUserIds
-        ));
+        ), captain.getId());
     }
 }

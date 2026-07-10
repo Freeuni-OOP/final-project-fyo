@@ -8,12 +8,19 @@ export class ApiError extends Error {
   }
 }
 
-export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+export type RequestInitWithToken = RequestInit & { token?: string };
+
+export async function request<T>(path: string, init?: RequestInitWithToken): Promise<T> {
+  const { token, headers: extraHeaders, ...rest } = init ?? {};
   let res: Response;
   try {
     res = await fetch(`${BASE}${path}`, {
-      headers: { "Content-Type": "application/json" },
-      ...init,
+      ...rest,
+      headers: {
+        "Content-Type": "application/json",
+        ...(extraHeaders as Record<string, string> | undefined),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
     });
   } catch {
     throw new ApiError(0, "Can't reach the server. Is the backend running?");

@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { matchesApi, type Match, type MatchStatus } from "../../api/matches";
 import { ApiError } from "../../api/http";
+import { useAuth } from "../../hooks/useAuth";
 import { TeamRow } from "../../teams/TeamsBoard";
 import { useTeams } from "../../teams/useTeams";
 import { useReveal } from "../../teams/useReveal";
@@ -37,26 +38,35 @@ function formatKickoff(iso: string | null): string {
 
 /** Matches load independently of teams: a failure on one shouldn't blank the other. */
 function useMyMatches(userId: number | undefined) {
+  const { getIdToken } = useAuth();
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     if (userId === undefined) {
       setLoading(false);
       return;
     }
-    let alive = true;
     setLoading(true);
-    matchesApi
-      .listForUser(userId)
-      .then((m) => alive && setMatches(m))
-      .catch((e: ApiError) => alive && setError(e.message))
-      .finally(() => alive && setLoading(false));
-    return () => {
-      alive = false;
-    };
-  }, [userId]);
+    (async () => {
+      try {
+        const token = await getIdToken();
+        if (!token) throw new ApiError(401, "Your session expired. Sign in again.");
+        const m = await matchesApi.mine(token);
+        setMatches(m);
+        setError(null);
+      } catch (e: unknown) {
+        setError(e instanceof ApiError ? e.message : "Could not load matches.");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [userId, getIdToken]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   return { matches, loading, error };
 }
