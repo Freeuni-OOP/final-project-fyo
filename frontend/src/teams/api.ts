@@ -13,32 +13,36 @@ export { ApiError } from "../api/http";
 export const teamsApi = {
   list: () => request<TeamSummary[]>("/api/teams"),
   get: (id: number) => request<TeamDetails>(`/api/teams/${id}`),
-  myTeams: (userId: number) => request<MyTeam[]>(`/api/teams/mine?userId=${userId}`),
-  myJoinRequests: (userId: number) =>
-    request<MyJoinRequest[]>(`/api/teams/my-requests?userId=${userId}`),
-  create: (body: CreateTeamPayload) =>
+  myTeams: (token: string) =>
+    request<MyTeam[]>("/api/teams/mine", { token }),
+  myJoinRequests: (token: string) =>
+    request<MyJoinRequest[]>("/api/teams/my-requests", { token }),
+  create: (token: string, body: CreateTeamPayload) =>
     request<TeamDetails>("/api/teams", {
       method: "POST",
       body: JSON.stringify(body),
+      token,
     }),
-  join: (id: number, userId: number) =>
+  join: (token: string, id: number) =>
     request<TeamDetails>(`/api/teams/${id}/join`, {
       method: "POST",
-      body: JSON.stringify({ userId }),
+      token,
     }),
-
-  requestToJoin: (teamId: number, userId: number) =>
-    request<JoinRequest>(`/api/teams/${teamId}/join-requests?userId=${userId}`, {
+  requestToJoin: (token: string, teamId: number) =>
+    request<JoinRequest>(`/api/teams/${teamId}/join-requests`, {
       method: "POST",
+      token,
     }),
   getPendingRequests: (teamId: number) =>
     request<JoinRequest[]>(`/api/teams/${teamId}/join-requests`),
-  acceptRequest: (teamId: number, requestId: number, captainUserId: number) =>
-    request<JoinRequest>(`/api/teams/${teamId}/join-requests/${requestId}/accept?captainUserId=${captainUserId}`, {
+  acceptRequest: (token: string, teamId: number, requestId: number) =>
+    request<JoinRequest>(`/api/teams/${teamId}/join-requests/${requestId}/accept`, {
       method: "POST",
+      token,
     }),
-  declineRequest: (teamId: number, requestId: number, captainUserId: number) =>
-    request<JoinRequest>(`/api/teams/${teamId}/join-requests/${requestId}/decline?captainUserId=${captainUserId}`, {
+  declineRequest: (token: string, teamId: number, requestId: number) =>
+    request<JoinRequest>(`/api/teams/${teamId}/join-requests/${requestId}/decline`, {
       method: "POST",
+      token,
     }),
 };

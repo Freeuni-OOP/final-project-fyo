@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PageHead } from "../AppShell";
 import { adminApi, AdminApiError } from "../../Admin/api";
 import type { UserAdmin, TeamAdmin, SportAdmin } from "../../Admin/types";
+import { useAuth } from "../../hooks/useAuth";
 import { Button } from "../../teams/ui";
 
 type Tab = "users" | "teams" | "sports";
 
 export function AdminPage() {
+    const { getIdToken } = useAuth();
     const [tab, setTab] = useState<Tab>("users");
 
     const [users, setUsers] = useState<UserAdmin[]>([]);
@@ -19,30 +21,37 @@ export function AdminPage() {
     const [newSport, setNewSport] = useState("");
     const [addingSport, setAddingSport] = useState(false);
 
+    const requireToken = useCallback(async () => {
+        const token = await getIdToken();
+        if (!token) throw new AdminApiError(401, "Your session expired. Sign in again.");
+        return token;
+    }, [getIdToken]);
+
     useEffect(() => {
         setError(null);
         setLoading(true);
-        if (tab === "users") {
-        adminApi.getUsers()
-            .then(setUsers)
-            .catch((e: AdminApiError) => setError(e.message))
-            .finally(() => setLoading(false));
-        } else if (tab === "teams") {
-        adminApi.getTeams()
-            .then(setTeams)
-            .catch((e: AdminApiError) => setError(e.message))
-            .finally(() => setLoading(false));
-        } else {
-        adminApi.getSports()
-            .then(setSports)
-            .catch((e: AdminApiError) => setError(e.message))
-            .finally(() => setLoading(false));
-        }
-    }, [tab]);
+        (async () => {
+            try {
+                const token = await requireToken();
+                if (tab === "users") {
+                    setUsers(await adminApi.getUsers(token));
+                } else if (tab === "teams") {
+                    setTeams(await adminApi.getTeams(token));
+                } else {
+                    setSports(await adminApi.getSports(token));
+                }
+            } catch (e) {
+                setError((e as AdminApiError).message);
+            } finally {
+                setLoading(false);
+            }
+        })();
+    }, [tab, requireToken]);
 
     async function handleArchiveUser(id: number) {
         try {
-        const updated = await adminApi.archiveUser(id);
+        const token = await requireToken();
+        const updated = await adminApi.archiveUser(token, id);
         setUsers((prev) => prev.map((u) => (u.id === id ? updated : u)));
         } catch (e) {
         alert((e as AdminApiError).message);
@@ -51,7 +60,8 @@ export function AdminPage() {
 
     async function handleArchiveTeam(id: number) {
         try {
-        const updated = await adminApi.archiveTeam(id);
+        const token = await requireToken();
+        const updated = await adminApi.archiveTeam(token, id);
         setTeams((prev) => prev.map((t) => (t.id === id ? updated : t)));
         } catch (e) {
         alert((e as AdminApiError).message);
@@ -63,7 +73,8 @@ export function AdminPage() {
         if (!newSport.trim()) return;
         setAddingSport(true);
         try {
-            const created = await adminApi.createSport(newSport.trim());
+            const token = await requireToken();
+            const created = await adminApi.createSport(token, newSport.trim());
             setSports((prev) => [...prev, created]);
             setNewSport("");
         } catch (e) {
@@ -76,7 +87,8 @@ export function AdminPage() {
     async function handleDeleteSport(id: number) {
         if (!confirm("Delete this sport?")) return;
         try {
-            await adminApi.deleteSport(id);
+            const token = await requireToken();
+            await adminApi.deleteSport(token, id);
             setSports((prev) => prev.filter((s) => s.id !== id));
         } catch (e) {
             alert((e as AdminApiError).message);

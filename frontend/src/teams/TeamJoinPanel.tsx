@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../hooks/useAuth";
 import { ApiError, teamsApi } from "./api";
 import type { MyJoinRequest, TeamDetails } from "./types";
 import { Button } from "./ui";
 
 interface TeamJoinPanelProps {
   team: TeamDetails;
-  /** Absent on the signed-out public view, which has to ask who is applying. */
+  /** Set when the viewer is signed in; join requests require a Bearer token. */
   currentUserId?: number;
 }
 
@@ -24,11 +25,9 @@ type ExistingRequest = MyJoinRequest | null | undefined;
  * the full team page so the two can't drift apart.
  */
 export function TeamJoinPanel({ team, currentUserId }: TeamJoinPanelProps) {
+  const { getIdToken } = useAuth();
   const [existing, setExisting] = useState<ExistingRequest>(undefined);
   const [sentJustNow, setSentJustNow] = useState(false);
-
-  const [formOpen, setFormOpen] = useState(false);
-  const [typedUserId, setTypedUserId] = useState("");
   const [sending, setSending] = useState(false);
   const [problem, setProblem] = useState<Problem | null>(null);
 
@@ -37,55 +36,50 @@ export function TeamJoinPanel({ team, currentUserId }: TeamJoinPanelProps) {
     currentUserId !== undefined && team.members.some((m) => m.userId === currentUserId);
   const knownViewer = currentUserId !== undefined;
 
-  // Reading the viewer's own requests lets us explain the situation up front,
-  // instead of letting them discover it by being rejected.
   useEffect(() => {
     if (!knownViewer || isMember) return;
     let alive = true;
-    teamsApi
-      .myJoinRequests(currentUserId)
-      .then((requests) => {
+    (async () => {
+      try {
+        const token = await getIdToken();
+        if (!token || !alive) return;
+        const requests = await teamsApi.myJoinRequests(token);
         if (alive) setExisting(requests.find((r) => r.team.id === team.id) ?? null);
-      })
-      // Non-fatal: the server still rejects a duplicate with a clear message.
-      .catch(() => alive && setExisting(null));
+      } catch {
+        if (alive) setExisting(null);
+      }
+    })();
     return () => {
       alive = false;
     };
-  }, [knownViewer, currentUserId, isMember, team.id]);
+  }, [knownViewer, currentUserId, isMember, team.id, getIdToken]);
 
-  async function send(applicantId: number) {
+  async function sendRequest() {
     setSending(true);
     setProblem(null);
     try {
-      await teamsApi.requestToJoin(team.id, applicantId);
+      const token = await getIdToken();
+      if (!token) {
+        setProblem({ text: "Your session expired. Sign in again.", kind: "error" });
+        return;
+      }
+      await teamsApi.requestToJoin(token, team.id);
       setSentJustNow(true);
-      setFormOpen(false);
-      setTypedUserId("");
     } catch (err) {
       const error = err as ApiError;
       setProblem({ text: error.message, kind: error.status === 409 ? "warn" : "error" });
-      // A conflict means our picture of the viewer is stale. Re-read it so the
-      // panel settles on the real state rather than re-offering the button.
       if (error.status === 409 && knownViewer) {
-        teamsApi
-          .myJoinRequests(currentUserId)
-          .then((requests) => setExisting(requests.find((r) => r.team.id === team.id) ?? null))
-          .catch(() => {});
+        const token = await getIdToken();
+        if (token) {
+          teamsApi
+            .myJoinRequests(token)
+            .then((requests) => setExisting(requests.find((r) => r.team.id === team.id) ?? null))
+            .catch(() => {});
+        }
       }
     } finally {
       setSending(false);
     }
-  }
-
-  function submitTypedId(event: React.FormEvent) {
-    event.preventDefault();
-    const id = Number(typedUserId);
-    if (!Number.isInteger(id) || id <= 0) {
-      setProblem({ text: "Enter a valid numeric player id.", kind: "error" });
-      return;
-    }
-    void send(id);
   }
 
   if (sentJustNow) {
@@ -140,33 +134,13 @@ export function TeamJoinPanel({ team, currentUserId }: TeamJoinPanelProps) {
   return (
     <>
       {knownViewer ? (
-        <Button variant="solid" disabled={sending} onClick={() => void send(currentUserId)}>
+        <Button variant="solid" disabled={sending} onClick={() => void sendRequest()}>
           {sending ? "Sending…" : "Request to join →"}
         </Button>
-      ) : formOpen ? (
-        <form className="joinform" onSubmit={submitTypedId}>
-          <label className="joinform__label" htmlFor="join-user">
-            Your player id
-          </label>
-          <div className="joinform__row">
-            <input
-              id="join-user"
-              className="joinform__input"
-              inputMode="numeric"
-              placeholder="e.g. 4"
-              value={typedUserId}
-              onChange={(e) => setTypedUserId(e.target.value)}
-              autoFocus
-            />
-            <Button variant="optic" type="submit" disabled={sending}>
-              {sending ? "Sending…" : "Send request"}
-            </Button>
-          </div>
-        </form>
       ) : (
-        <Button variant="solid" onClick={() => setFormOpen(true)}>
-          Request to join →
-        </Button>
+        <p className="td__closed-note">
+          <a href="#/login">Log in</a> to request to join this team.
+        </p>
       )}
 
       {problem && (

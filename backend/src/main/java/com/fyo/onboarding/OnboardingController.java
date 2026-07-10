@@ -1,5 +1,7 @@
 package com.fyo.onboarding;
 
+import com.fyo.auth.CurrentUserService;
+import com.fyo.domain.User;
 import com.fyo.onboarding.dto.OnboardingRequest;
 import com.fyo.onboarding.dto.OnboardingResponse;
 import com.fyo.onboarding.dto.OnboardingStatusResponse;
@@ -7,8 +9,8 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -16,28 +18,27 @@ import org.springframework.web.bind.annotation.RestController;
 public class OnboardingController {
 
     private final OnboardingService onboardingService;
+    private final CurrentUserService currentUserService;
 
-    public OnboardingController(OnboardingService onboardingService) {
+    public OnboardingController(OnboardingService onboardingService, CurrentUserService currentUserService) {
         this.onboardingService = onboardingService;
+        this.currentUserService = currentUserService;
     }
 
-    // TODO: replace @RequestParam Long userId with authenticated user from
-    //       security context once Sandro's Firebase filter is merged.
-    //       @AuthenticationPrincipal FirebaseUserDetails userDetails
-    //          and extract userDetails.getUserId()
     @PostMapping
     public OnboardingResponse completeOnboarding(
-            @RequestParam Long userId,
+            @RequestHeader(value = "Authorization", required = false) String authorization,
             @Valid @RequestBody OnboardingRequest request
     ) {
-        return onboardingService.completeOnboarding(userId, request);
+        User currentUser = currentUserService.requireCurrentUser(authorization);
+        return onboardingService.completeOnboarding(currentUser.getId(), request);
     }
 
-    // TODO: same as above. Replace @RequestParam with auth context
     @GetMapping("/status")
     public OnboardingStatusResponse getOnboardingStatus(
-            @RequestParam Long userId
+            @RequestHeader(value = "Authorization", required = false) String authorization
     ) {
-        return onboardingService.getOnboardingStatus(userId);
+        User currentUser = currentUserService.requireCurrentUser(authorization);
+        return onboardingService.getOnboardingStatus(currentUser.getId());
     }
 }

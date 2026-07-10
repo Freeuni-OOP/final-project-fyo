@@ -39,10 +39,11 @@ export const matchesApi = {
     const qs = q.toString();
     return request<Match[]>(`/api/matches${qs ? `?${qs}` : ""}`);
   },
-  listForUser: (userId: number) => request<Match[]>(`/api/matches?userId=${userId}`),
+  mine: (token: string) => request<Match[]>("/api/matches/mine", { token }),
   get: (id: number) => request<Match>(`/api/matches/${id}`),
-  cancel: (id: number, actingUserId: number) =>
-    request<Match>(`/api/matches/${id}/cancel?actingUserId=${actingUserId}`, {
+  cancel: (token: string, id: number) =>
+    request<Match>(`/api/matches/${id}/cancel`, {
       method: "POST",
+      token,
     }),
 };

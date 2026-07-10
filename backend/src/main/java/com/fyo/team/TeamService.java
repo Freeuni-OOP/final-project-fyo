@@ -54,10 +54,10 @@ public class TeamService {
     }
 
     @Transactional
-    public TeamDetailsResponse createTeam(CreateTeamRequest request) {
+    public TeamDetailsResponse createTeam(CreateTeamRequest request, Long captainUserId) {
         Sport sport = sportRepository.findById(request.sportId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sport not found"));
-        User captain = userRepository.findById(request.captainUserId())
+        User captain = userRepository.findById(captainUserId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Captain user not found"));
 
         short maxPlayers = request.maxPlayers().shortValue();
@@ -118,10 +118,10 @@ public class TeamService {
     }
 
     @Transactional
-    public TeamDetailsResponse joinTeam(Long id, JoinTeamRequest request) {
+    public TeamDetailsResponse joinTeam(Long id, Long userId) {
         Team team = teamRepository.findByIdAndArchivedFalseForUpdate(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Team not found"));
-        User user = userRepository.findById(request.userId())
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         if (!team.isRecruiting()) {

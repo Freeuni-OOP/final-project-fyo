@@ -109,12 +109,18 @@ export function MatchesPage() {
     if (userId == null) return;
     setMatchesLoading(true);
     setMatchesError(null);
-    matchesApi
-      .list({ userId })
-      .then(setMatches)
-      .catch((e: ApiError) => setMatchesError(e.message))
-      .finally(() => setMatchesLoading(false));
-  }, [userId]);
+    (async () => {
+      try {
+        const token = await requireToken();
+        const loaded = await matchesApi.mine(token);
+        setMatches(loaded);
+      } catch (e: unknown) {
+        setMatchesError(e instanceof ApiError ? e.message : "Could not load matches.");
+      } finally {
+        setMatchesLoading(false);
+      }
+    })();
+  }, [userId, requireToken]);
 
   useEffect(() => {
     void getSports().then(setSports);
@@ -513,10 +519,9 @@ export function MatchesPage() {
         </>
       )}
 
-      {openMatchId !== null && userId != null && (
+      {openMatchId !== null && (
         <MatchDetail
           matchId={openMatchId}
-          actingUserId={userId}
           onClose={() => setOpenMatchId(null)}
           onUpdated={(updated) =>
             setMatches((prev) => prev.map((m) => (m.id === updated.id ? updated : m)))

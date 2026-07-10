@@ -30,9 +30,6 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [requestOpen, setRequestOpen] = useState(false);
-  // Signed-in callers already know who they are; only the public view has to ask.
-  const [userId, setUserId] = useState(currentUserId ? String(currentUserId) : "");
   const [requesting, setRequesting] = useState(false);
   const [requestError, setRequestError] = useState<string | null>(null);
   const [requested, setRequested] = useState(false);
@@ -79,20 +76,17 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
     };
   }, [onClose]);
 
-  async function submitRequest(e: React.FormEvent) {
-    e.preventDefault();
-    const id = Number(userId);
-    if (!Number.isInteger(id) || id <= 0) {
-      setRequestError("Enter a valid numeric player id.");
-      return;
-    }
+  async function submitRequest() {
     setRequesting(true);
     setRequestError(null);
     try {
-      await teamsApi.requestToJoin(teamId, id);
+      const token = await getIdToken();
+      if (!token) {
+        setRequestError("Your session expired. Sign in again.");
+        return;
+      }
+      await teamsApi.requestToJoin(token, teamId);
       setRequested(true);
-      setRequestOpen(false);
-      setUserId("");
     } catch (err) {
       setRequestError((err as ApiError).message);
     } finally {
@@ -102,7 +96,9 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
 
   async function handleAccept(requestId: number) {
     try {
-      await teamsApi.acceptRequest(teamId, requestId, currentUserId);
+      const token = await getIdToken();
+      if (!token) throw new Error("Your session expired. Sign in again.");
+      await teamsApi.acceptRequest(token, teamId, requestId);
       setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
       const updated = await teamsApi.get(teamId);
       setTeam(updated);
@@ -114,7 +110,9 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
 
   async function handleDecline(requestId: number) {
     try {
-      await teamsApi.declineRequest(teamId, requestId, currentUserId);
+      const token = await getIdToken();
+      if (!token) throw new Error("Your session expired. Sign in again.");
+      await teamsApi.declineRequest(token, teamId, requestId);
       setPendingRequests((prev) => prev.filter((r) => r.id !== requestId));
     } catch (err) {
       alert((err as ApiError).message);
@@ -265,31 +263,17 @@ export function TeamDetail({ teamId, onClose, onJoined, currentUserId }: TeamDet
                 <p className="td__closed-note">This team isn't taking new players right now.</p>
               ) : isCaptain ? (
                 <p className="td__closed-note">You are the captain of this team.</p>
-              ) : requestOpen ? (
-                <form className="joinform" onSubmit={submitRequest}>
-                  <label className="joinform__label" htmlFor="join-user">
-                    Your player id
-                  </label>
-                  <div className="joinform__row">
-                    <input
-                      id="join-user"
-                      className="joinform__input"
-                      inputMode="numeric"
-                      placeholder="e.g. 4"
-                      value={userId}
-                      onChange={(e) => setUserId(e.target.value)}
-                      autoFocus
-                    />
-                    <Button variant="optic" type="submit" disabled={requesting}>
-                      {requesting ? "Sending…" : "Send request"}
-                    </Button>
-                  </div>
-                  {requestError && <p className="joinform__error">{requestError}</p>}
-                </form>
+              ) : !currentUserId ? (
+                <p className="td__closed-note">
+                  <a href="#/login">Log in</a> to request to join this team.
+                </p>
               ) : (
-                <Button variant="solid" onClick={() => setRequestOpen(true)}>
-                  Request to join →
-                </Button>
+                <>
+                  <Button variant="solid" disabled={requesting} onClick={() => void submitRequest()}>
+                    {requesting ? "Sending…" : "Request to join →"}
+                  </Button>
+                  {requestError && <p className="joinform__error">{requestError}</p>}
+                </>
               )}
             </footer>
           </>

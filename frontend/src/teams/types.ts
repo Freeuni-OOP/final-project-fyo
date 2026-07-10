@@ -45,7 +45,7 @@ export interface TeamDetails extends TeamSummary {
   members: TeamMember[];
 }
 
-/** Mirrors `CreateTeamRequest`: name, sportId, maxPlayers and captainUserId are required. */
+/** Mirrors `CreateTeamRequest` — captain comes from the Bearer token. */
 export interface CreateTeamPayload {
   name: string;
   sportId: number;
@@ -54,7 +54,6 @@ export interface CreateTeamPayload {
   logoUrl: string | null;
   maxPlayers: number;
   isRecruiting: boolean;
-  captainUserId: number;
   /** Players the captain seats up front. The captain is added regardless. */
   memberUserIds: number[];
 }
