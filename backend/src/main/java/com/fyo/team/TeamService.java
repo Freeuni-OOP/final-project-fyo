@@ -125,15 +125,15 @@ public class TeamService {
     }
 
     @Transactional
-    public JoinRequestResponse acceptJoinRequest(Long teamId, Long requestId) {
+    public JoinRequestResponse acceptJoinRequest(Long teamId, Long requestId, Long actingUserId) {
         JoinRequest joinRequest = joinRequestRepository.findByIdAndTeamId(requestId, teamId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Join request not found"));
 
+        Team team = joinRequest.getTeam();
+        requireCaptain(team, actingUserId);
         if (joinRequest.getStatus() != JoinRequestStatus.PENDING) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request is not pending");
         }
-
-        Team team = joinRequest.getTeam();
         if (team.getOpenSpots() <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Team has no open spots");
         }
@@ -146,10 +146,11 @@ public class TeamService {
     }
 
     @Transactional
-    public JoinRequestResponse declineJoinRequest(Long teamId, Long requestId) {
+    public JoinRequestResponse declineJoinRequest(Long teamId, Long requestId, Long actingUserId) {
         JoinRequest joinRequest = joinRequestRepository.findByIdAndTeamId(requestId, teamId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Join request not found"));
 
+        requireCaptain(joinRequest.getTeam(), actingUserId);
         if (joinRequest.getStatus() != JoinRequestStatus.PENDING) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Request is not pending");
         }
@@ -166,6 +167,12 @@ public class TeamService {
                 .stream()
                 .map(this::toJoinRequestResponse)
                 .toList();
+    }
+
+    private void requireCaptain(Team team, Long actingUserId) {
+        if (!team.getCaptain().getId().equals(actingUserId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the team captain can manage join requests");
+        }
     }
 
     private TeamSummaryResponse toSummaryResponse(Team team) {
