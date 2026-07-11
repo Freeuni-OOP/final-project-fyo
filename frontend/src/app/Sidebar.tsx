@@ -1,6 +1,7 @@
 import { Avatar, Ball, Button, Wordmark } from "../teams/ui";
 import { displayNameOf, useSession } from "../session/SessionContext";
 import { isNavItemActive, NAV } from "./nav";
+import { type NotificationBucket, useNotificationCount } from "../notifications/useNotificationCount";
 
 interface SidebarProps {
   activeHash: string;
@@ -9,6 +10,7 @@ interface SidebarProps {
 
 export function Sidebar({ activeHash, onNavigate }: SidebarProps) {
   const { user, signOut } = useSession();
+  const notifications = useNotificationCount();
 
   return (
     <aside className="shell__nav" aria-label="Platform">
@@ -20,8 +22,12 @@ export function Sidebar({ activeHash, onNavigate }: SidebarProps) {
 
       <nav className="shell__navlist">
         <p className="shell__navhead">Menu</p>
-        {NAV.filter(item => item.href !== "#/app/admin" || user?.admin).map((item) =>
-          item.soon ? (
+        {NAV.filter(item => item.href !== "#/app/admin" || user?.admin).map((item) => {
+          const bucket = item.href as NotificationBucket;
+          const count = notifications.counts[bucket] ?? 0;
+          const latest = notifications.latestByBucket[bucket];
+
+          return item.soon ? (
             <span className="navitem navitem--soon" key={item.href} aria-disabled="true">
               {item.label}
               <em className="navitem__soon">Soon</em>
@@ -31,14 +37,21 @@ export function Sidebar({ activeHash, onNavigate }: SidebarProps) {
               className={`navitem ${isNavItemActive(item, activeHash) ? "navitem--on" : ""}`}
               key={item.href}
               href={item.href}
-              onClick={onNavigate}
+              onClick={() => {
+                notifications.clear(bucket);
+                onNavigate();
+              }}
               aria-current={isNavItemActive(item, activeHash) ? "page" : undefined}
+              title={latest?.message}
             >
-              {isNavItemActive(item, activeHash) && <Ball className="navitem__ball" />}
-              {item.label}
+              <span className="navitem__main">
+                {isNavItemActive(item, activeHash) && <Ball className="navitem__ball" />}
+                {item.label}
+              </span>
+              {count > 0 && <span className="navitem__count">{count}</span>}
             </a>
-          )
-        )}
+          );
+        })}
       </nav>
 
       {user && (

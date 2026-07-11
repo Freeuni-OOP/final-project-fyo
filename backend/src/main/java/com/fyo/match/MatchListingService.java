@@ -18,6 +18,7 @@ import com.fyo.match.dto.MatchListingItem;
 import com.fyo.match.dto.MatchParticipantResponse;
 import com.fyo.match.dto.RespondToListingRequest;
 import com.fyo.match.dto.SportResponse;
+import com.fyo.notification.NotificationService;
 import com.fyo.repository.MatchListingRepository;
 import com.fyo.repository.MatchListingResponseRepository;
 import com.fyo.repository.MatchRepository;
@@ -30,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * Orchestrates the listing lifecycle: post → respond → accept. Accepting a
+ * Orchestrates the listing lifecycle: post -> respond -> accept. Accepting a
  * response is the moment a {@link Match} is born; the same transaction fills
  * the listing, declines every other pending response, and auto-creates the
  * match conversation so both sides can settle time, place, and rules.
@@ -44,6 +45,7 @@ public class MatchListingService {
     private final SportRepository sportRepository;
     private final TeamRepository teamRepository;
     private final ChatService chatService;
+    private final NotificationService notificationService;
 
     public MatchListingService(
             MatchListingRepository listingRepository,
@@ -51,7 +53,8 @@ public class MatchListingService {
             MatchRepository matchRepository,
             SportRepository sportRepository,
             TeamRepository teamRepository,
-            ChatService chatService
+            ChatService chatService,
+            NotificationService notificationService
     ) {
         this.listingRepository = listingRepository;
         this.responseRepository = responseRepository;
@@ -59,6 +62,7 @@ public class MatchListingService {
         this.sportRepository = sportRepository;
         this.teamRepository = teamRepository;
         this.chatService = chatService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -74,7 +78,14 @@ public class MatchListingService {
             listing = MatchListing.postedByTeam(sport, team, request.location(), request.proposedDatetime());
         }
 
-        return toListingItem(listingRepository.save(listing));
+        MatchListing saved = listingRepository.save(listing);
+        notificationService.notifyConnectedUsersExcept(
+                currentUser.getId(),
+                "NEW_MATCH_LISTING",
+                participantName(saved.getPostedByUser(), saved.getPostedByTeam()) + " posted a new match listing",
+                "#/app/matches"
+        );
+        return toListingItem(saved);
     }
 
     @Transactional(readOnly = true)
@@ -118,7 +129,9 @@ public class MatchListingService {
             response = MatchListingResponse.fromTeam(listing, team);
         }
 
-        return toResponseItem(responseRepository.save(response));
+        MatchListingResponse saved = responseRepository.save(response);
+        notifyListingPoster(listing, saved);
+        return toResponseItem(saved);
     }
 
     @Transactional(readOnly = true)
@@ -134,7 +147,7 @@ public class MatchListingService {
     /**
      * Poster accepts one response: the match is created (poster = home,
      * responder = away), the listing is filled, every other pending response
-     * is declined, and the match conversation is created — all atomically.
+     * is declined, and the match conversation is created - all atomically.
      */
     @Transactional
     public AcceptListingResult acceptResponse(User currentUser, Long listingId, Long responseId) {
@@ -157,9 +170,13 @@ public class MatchListingService {
         listingRepository.save(listing);
 
         responseRepository.findByListingIdAndStatus(listingId, MatchListingResponseStatus.PENDING)
-                .forEach(MatchListingResponse::decline);
+                .forEach(otherResponse -> {
+                    otherResponse.decline();
+                    notifyResponder(otherResponse, "MATCH_DECLINED", "Another response was accepted for this listing", "#/app/matches");
+                });
 
         ConversationResponse conversation = chatService.createMatchConversation(match);
+        notifyResponder(accepted, "MATCH_ACCEPTED", "Your match request was accepted", "#/app/chat/" + conversation.id());
 
         return new AcceptListingResult(listing.getId(), match.getId(), conversation.id());
     }
@@ -176,7 +193,32 @@ public class MatchListingService {
         }
 
         response.decline();
+        notifyResponder(response, "MATCH_DECLINED", "Your match request was declined", "#/app/matches");
         return toResponseItem(response);
+    }
+
+
+    private void notifyListingPoster(MatchListing listing, MatchListingResponse response) {
+        Long recipientId = listing.getPostedByUser() != null
+                ? listing.getPostedByUser().getId()
+                : listing.getPostedByTeam().getCaptain().getId();
+        notificationService.notifyUser(
+                recipientId,
+                "MATCH_REQUEST",
+                participantName(response.getResponderUser(), response.getResponderTeam()) + " responded to your match listing",
+                "#/app/matches"
+        );
+    }
+
+    private void notifyResponder(MatchListingResponse response, String type, String message, String link) {
+        Long recipientId = response.getResponderUser() != null
+                ? response.getResponderUser().getId()
+                : response.getResponderTeam().getCaptain().getId();
+        notificationService.notifyUser(recipientId, type, message, link);
+    }
+
+    private String participantName(User user, Team team) {
+        return user != null ? user.getUsername() : team.getName();
     }
 
     private Match buildMatch(MatchListing listing, MatchListingResponse accepted) {

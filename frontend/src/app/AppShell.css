@@ -1,5 +1,5 @@
 /* =================================================================
-   FYO platform shell — sidebar + content column.
+   FYO platform shell â€” sidebar + content column.
    Everything is nested under `.court` so the tokens from theme.css
    resolve and every component style in teams.css (rows, meters,
    chips, badges, drawer, avatar, buttons) applies inside the shell
@@ -72,7 +72,7 @@
 /* ---------- sidebar -------------------------------------------- */
 
 /* Fixed, not sticky: `.court` carries `overflow-x: clip`, and a sticky child
-   of a clipped box never pins to the viewport — the rail would scroll away
+   of a clipped box never pins to the viewport â€” the rail would scroll away
    and leave the page background under it. */
 .court .shell__nav {
   position: fixed;
@@ -320,4 +320,29 @@
   .court .navitem::before {
     transition: none;
   }
+}
+.court .navitem {
+  justify-content: space-between;
+}
+
+.court .navitem__main {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.court .navitem__count {
+  min-width: 22px;
+  height: 20px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 6px;
+  border: 1px solid rgba(241, 239, 233, 0.24);
+  background: var(--optic);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1;
 }
