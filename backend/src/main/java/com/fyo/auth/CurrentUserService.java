@@ -25,8 +25,14 @@ public class CurrentUserService {
     }
 
     public User requireCurrentUser(String authorization) {
-        String token = extractBearerToken(authorization);
-        FirebaseToken firebaseToken = tokenVerifier.verify(token);
+        return requireCurrentUserToken(extractBearerToken(authorization));
+    }
+
+    public User requireCurrentUserToken(String token) {
+        if (token == null || token.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing Firebase ID token");
+        }
+        FirebaseToken firebaseToken = tokenVerifier.verify(token.trim());
         return userRepository.findByFirebaseUid(firebaseToken.getUid())
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "No local account for this Firebase user"));

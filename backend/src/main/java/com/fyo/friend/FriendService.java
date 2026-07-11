@@ -8,6 +8,7 @@ import com.fyo.friend.dto.FriendRequestResponse;
 import com.fyo.friend.dto.FriendStatusResponse;
 import com.fyo.friend.dto.FriendSummaryResponse;
 import com.fyo.friend.dto.SendFriendRequestBody;
+import com.fyo.notification.NotificationService;
 import com.fyo.repository.FriendRequestRepository;
 import com.fyo.repository.UserRepository;
 import com.fyo.team.dto.UserSummaryResponse;
@@ -22,10 +23,16 @@ public class FriendService {
 
     private final FriendRequestRepository friendRequestRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
-    public FriendService(FriendRequestRepository friendRequestRepository, UserRepository userRepository) {
+    public FriendService(
+            FriendRequestRepository friendRequestRepository,
+            UserRepository userRepository,
+            NotificationService notificationService
+    ) {
         this.friendRequestRepository = friendRequestRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -124,7 +131,7 @@ public class FriendService {
         if (reversePending != null) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
-                    "This user already sent you a friend request — accept it instead"
+                    "This user already sent you a friend request - accept it instead"
             );
         }
 
@@ -137,11 +144,14 @@ public class FriendService {
             }
             if (existingOutgoing.getStatus() == FriendRequestStatus.DECLINED) {
                 existingOutgoing.reopen();
-                return toFriendRequestResponse(friendRequestRepository.save(existingOutgoing));
+                FriendRequest saved = friendRequestRepository.save(existingOutgoing);
+                notifyFriendRequest(saved);
+                return toFriendRequestResponse(saved);
             }
         }
 
         FriendRequest saved = friendRequestRepository.save(new FriendRequest(requester, addressee));
+        notifyFriendRequest(saved);
         return toFriendRequestResponse(saved);
     }
 
@@ -158,7 +168,14 @@ public class FriendService {
         }
 
         request.accept();
-        return toFriendRequestResponse(friendRequestRepository.save(request));
+        FriendRequest saved = friendRequestRepository.save(request);
+        notificationService.notifyUser(
+                saved.getRequester().getId(),
+                "FRIEND_ACCEPTED",
+                saved.getAddressee().getUsername() + " accepted your friend request",
+                "#/app/friends"
+        );
+        return toFriendRequestResponse(saved);
     }
 
     @Transactional
@@ -209,6 +226,16 @@ public class FriendService {
         }
 
         friendRequestRepository.delete(friendship);
+    }
+
+
+    private void notifyFriendRequest(FriendRequest request) {
+        notificationService.notifyUser(
+                request.getAddressee().getId(),
+                "FRIEND_REQUEST",
+                request.getRequester().getUsername() + " sent you a friend request",
+                "#/app/friends"
+        );
     }
 
     private User ensureUserExists(Long userId) {

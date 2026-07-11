@@ -12,6 +12,7 @@ import com.fyo.domain.MatchFormat;
 import com.fyo.domain.Team;
 import com.fyo.domain.TeamMember;
 import com.fyo.domain.User;
+import com.fyo.notification.NotificationService;
 import com.fyo.repository.ChatMessageRepository;
 import com.fyo.repository.ConversationParticipantRepository;
 import com.fyo.repository.ConversationRepository;
@@ -43,6 +44,7 @@ public class ChatService {
     private final ChatMessageRepository messageRepository;
     private final UserRepository userRepository;
     private final TeamMemberRepository teamMemberRepository;
+    private final NotificationService notificationService;
     private final TeamRepository teamRepository;
     private final MatchRepository matchRepository;
 
@@ -52,6 +54,7 @@ public class ChatService {
             ChatMessageRepository messageRepository,
             UserRepository userRepository,
             TeamMemberRepository teamMemberRepository,
+            NotificationService notificationService,
             TeamRepository teamRepository,
             MatchRepository matchRepository
     ) {
@@ -60,6 +63,7 @@ public class ChatService {
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
         this.teamMemberRepository = teamMemberRepository;
+        this.notificationService = notificationService;
         this.teamRepository = teamRepository;
         this.matchRepository = matchRepository;
     }
@@ -126,6 +130,7 @@ public class ChatService {
         }
 
         ChatMessage saved = messageRepository.save(new ChatMessage(conversation, sender, body));
+        notifyConversationParticipants(conversationId, sender, body);
         return toMessageResponse(saved);
     }
 
@@ -183,7 +188,7 @@ public class ChatService {
      * is UNIQUE). ONE_VS_ONE gets the two players; TEAM_VS_TEAM gets every member
      * of both rosters as a group chat.
      *
-     * <p>Internal API — called by the match acceptance flow, never from a
+     * <p>Internal API - called by the match acceptance flow, never from a
      * controller with client-supplied ids.
      */
     @Transactional
@@ -197,6 +202,21 @@ public class ChatService {
                     }
                     return toConversationResponse(conversation);
                 });
+    }
+
+
+    private void notifyConversationParticipants(Long conversationId, User sender, String body) {
+        String preview = body.length() > 80 ? body.substring(0, 77) + "..." : body;
+        List<Long> recipientIds = participantRepository.findByConversationId(conversationId).stream()
+                .map(participant -> participant.getUser().getId())
+                .filter(userId -> !userId.equals(sender.getId()))
+                .toList();
+        notificationService.notifyUsers(
+                recipientIds,
+                "MESSAGE",
+                sender.getUsername() + ": " + preview,
+                "#/app/chat/" + conversationId
+        );
     }
 
     private Collection<User> matchParticipants(Match match) {
