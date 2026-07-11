@@ -29,9 +29,11 @@ public class PlayerService {
         String trimmedRegion = (region == null || region.isBlank()) ? null : region.trim();
         int capped = Math.min(Math.max(limit, 1), MAX_RESULTS);
 
-        return userSportRepository
-                .search(sportId, trimmedRegion, parsedSkill, PageRequest.of(0, capped))
-                .stream()
+        List<UserSport> rows = trimmedRegion == null
+                ? userSportRepository.search(sportId, parsedSkill, PageRequest.of(0, capped))
+                : userSportRepository.searchByRegion(sportId, trimmedRegion, parsedSkill, PageRequest.of(0, capped));
+
+        return rows.stream()
                 .map(PlayerService::toSummary)
                 .toList();
     }

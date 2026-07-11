@@ -19,11 +19,25 @@ public interface UserSportRepository extends JpaRepository<UserSport, Long> {
             JOIN FETCH us.sport s
             WHERE u.archived = false
               AND (:sportId IS NULL OR s.id = :sportId)
-              AND (:region IS NULL OR LOWER(u.region) = LOWER(:region))
               AND (:skillLevel IS NULL OR us.skillLevel = :skillLevel)
             ORDER BY u.username
             """)
     List<UserSport> search(
+            @Param("sportId") Long sportId,
+            @Param("skillLevel") SkillLevel skillLevel,
+            Pageable pageable);
+
+    @Query("""
+            SELECT us FROM UserSport us
+            JOIN FETCH us.user u
+            JOIN FETCH us.sport s
+            WHERE u.archived = false
+              AND (:sportId IS NULL OR s.id = :sportId)
+              AND LOWER(u.region) = LOWER(:region)
+              AND (:skillLevel IS NULL OR us.skillLevel = :skillLevel)
+            ORDER BY u.username
+            """)
+    List<UserSport> searchByRegion(
             @Param("sportId") Long sportId,
             @Param("region") String region,
             @Param("skillLevel") SkillLevel skillLevel,
